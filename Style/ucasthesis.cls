@@ -126,10 +126,10 @@
 ]{geometry}
 \setlength{\marginparwidth}{35pt}% width of margin notes
 \setlength{\marginparsep}{10pt}% width of space between body text and margin notes
-%- specifies the amount of space between paragraphs.
-\setlength{\parskip}{0.5ex plus 0.25ex minus 0.25ex}
 %- line spacing: 1.25倍行距 per 2022 guidelines
 \linespread{1.25}% line space setting
+%- 段间距：中文论文以首行缩进区分段落，段间不加额外间距（规范第4.2.2条）
+\setlength{\parskip}{0pt}
 \raggedbottom% prevent adding vertical white space in strange places
 %- default pagestyle is page number at bottom without headers and footers
 \pagestyle{plain}
