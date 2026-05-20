@@ -85,7 +85,7 @@
 \newcommand{\ucasifstrbk}{\expandafter\ifblank\expandafter}% expansion control
 \RequirePackage{expl3}% LaTeX3 programming environment
 \ExplSyntaxOn
-\newcommand{\ucaslntotab}[2][1pt]{% convert lines into table lines
+\newcommand{\ucaslntotab}[2][1bp]{% convert lines into table lines
     \seq_set_split:NnV \l_tmpa_seq {\\} {#2}
     \clist_set_from_seq:NN \l_tmpa_clist \l_tmpa_seq
     \clist_clear:N \l_tmpb_clist
@@ -118,18 +118,18 @@
     bottom=2.54cm,
     left=3.17cm,
     right=3.17cm,
-    headheight=12pt,
+    headheight=12bp,
     headsep=0.65cm,
     footskip=0.94cm,
     includehead,
     includefoot,
 ]{geometry}
-\setlength{\marginparwidth}{35pt}% width of margin notes
-\setlength{\marginparsep}{10pt}% width of space between body text and margin notes
+\setlength{\marginparwidth}{35bp}% width of margin notes
+\setlength{\marginparsep}{10bp}% width of space between body text and margin notes
 %- line spacing: 1.25倍行距 per 2022 guidelines
 \linespread{1.25}% line space setting
 %- 段间距：中文论文以首行缩进区分段落，段间不加额外间距（规范第4.2.2条）
-\setlength{\parskip}{0pt}
+\setlength{\parskip}{0bp}
 \raggedbottom% prevent adding vertical white space in strange places
 %- default pagestyle is page number at bottom without headers and footers
 \pagestyle{plain}
@@ -149,13 +149,13 @@
     \RequirePackage{ulem}%
 \fi
 \newcommand{\ulunify}[1]{\uline{#1}}% unified name
-\newcommand{\ulenhance}[2][1pt]{% enhanced underline
+\newcommand{\ulenhance}[2][1bp]{% enhanced underline
     \def\ULthickness{#1}% set thickness
     \setlength{\ULdepth}{0.5em}% set depth
     \expandafter\ulunify\expandafter{#2}% linebreak fix
 }
 \newcommand{\ulhshift}{-4em}% horizontal shift on underline
-\newcommand{\ulextend}[2][350pt]{% extend underline length
+\newcommand{\ulextend}[2][350bp]{% extend underline length
     \hbox to #1{\hfill\hspace*{\ulhshift}#2\hfill}}
 %---------------------------------------------------------------------------%
 %->> Titlepage
@@ -286,7 +286,7 @@
     \cleardoublepage
     \thispagestyle{empty}
     \begin{center}
-        \hfill{} \ucasifstrbk{\ucas@value@ch@confidential}{}{\ucas@label@ch@confidential \ulenhance{\ulextend[50pt]{\hspace*{-\ulhshift}\zihao{5}\ucas@value@ch@confidential}}}
+        \hfill{} \ucasifstrbk{\ucas@value@ch@confidential}{}{\ucas@label@ch@confidential \ulenhance{\ulextend[50bp]{\hspace*{-\ulhshift}\zihao{5}\ucas@value@ch@confidential}}}
 
         \vspace*{\stretch{4}}
 
@@ -299,20 +299,20 @@
         \vspace*{\stretch{3}}
 
         % 论文题目：黑体小三号加粗居中，单倍行距
-        {\linespread{1.0}\zihao{-3}\bfseries\sffamily \ulenhance[1.5pt]{\ucas@value@ch@title}}
+        {\linespread{1.0}\zihao{-3}\bfseries\sffamily \ulenhance[1.5bp]{\ucas@value@ch@title}}
 
         \vspace*{\stretch{3}}
 
         % 封面信息：宋体四号加粗，2倍行距
         \linespread{2.0}\zihao{4}\bfseries
-        \def\tabcolsep{1pt}
+        \def\tabcolsep{1bp}
         \def\arraystretch{1.0}
         \begin{tabular}{lc}
-            \ucas@label@ch@author & \ulenhance[1.2pt]{\ulextend{\ucas@value@ch@author}}\\
-            \ucas@label@ch@advisor & \ucaslntotab[1.2pt]{\ucas@value@ch@advisor}\\
-            \ucas@label@ch@degree & \ulenhance[1.2pt]{\ulextend{\ucas@value@ch@degreetype\ucas@value@ch@degree}}\\
-            \ucas@label@ch@major & \ulenhance[1.2pt]{\ulextend{\ucas@value@ch@major}}\\
-            \ucas@label@ch@institute & \ucaslntotab[1.2pt]{\ucas@value@ch@institute}\\
+            \ucas@label@ch@author & \ulenhance[1.2bp]{\ulextend{\ucas@value@ch@author}}\\
+            \ucas@label@ch@advisor & \ucaslntotab[1.2bp]{\ucas@value@ch@advisor}\\
+            \ucas@label@ch@degree & \ulenhance[1.2bp]{\ulextend{\ucas@value@ch@degreetype\ucas@value@ch@degree}}\\
+            \ucas@label@ch@major & \ulenhance[1.2bp]{\ulextend{\ucas@value@ch@major}}\\
+            \ucas@label@ch@institute & \ucaslntotab[1.2bp]{\ucas@value@ch@institute}\\
         \end{tabular}
 
         \vspace*{\stretch{4}}
@@ -355,7 +355,7 @@
     \thispagestyle{empty}
     \begin{center}
 
-        \vspace*{30pt}
+        \vspace*{30bp}
 
         \linespread{2.0}
         \zihao{4}
@@ -374,7 +374,7 @@
 
         \vspace*{\stretch{3}}
 
-        {\zihao{-3} \ulenhance[1.5pt]{\ucas@value@ch@title}}
+        {\zihao{-3} \ulenhance[1.5bp]{\ucas@value@ch@title}}
 
         \vspace*{\stretch{2.5}}
 
@@ -382,11 +382,11 @@
 
         \vspace*{\stretch{2.5}}
 
-        \def\tabcolsep{1pt}
+        \def\tabcolsep{1bp}
         \def\arraystretch{1.3}
         \begin{tabular}{l@{\quad}c}
-            \ucas@label@ch@completedate & \ulenhance{\ulextend[200pt]{\ucas@value@ch@completedate}}\\
-            \ucas@label@ch@submitdate & \ulenhance{\ulextend[200pt]{\ucas@value@ch@submitdate}}\\
+            \ucas@label@ch@completedate & \ulenhance{\ulextend[200bp]{\ucas@value@ch@completedate}}\\
+            \ucas@label@ch@submitdate & \ulenhance{\ulextend[200bp]{\ucas@value@ch@submitdate}}\\
         \end{tabular}
 
         \vspace*{\stretch{2}}
@@ -415,10 +415,10 @@
     \cleardoublepage
     \thispagestyle{empty}
     \begin{center}
-        \vspace*{50pt}
+        \vspace*{50bp}
 
         % 英文题目：Times New Roman小三号加粗居中，单倍行距
-        {\linespread{1.0}\zihao{-3}\bfseries \ulenhance[1.5pt]{\ucas@value@en@title}}
+        {\linespread{1.0}\zihao{-3}\bfseries \ulenhance[1.5bp]{\ucas@value@en@title}}
 
         \vspace*{\stretch{3}}
 
@@ -456,7 +456,7 @@
         \linespread{2.0}
         \zihao{4}
 
-        \vspace*{50pt}
+        \vspace*{50bp}
 
         {\zihao{3} \ucas@value@ch@title}
 
@@ -466,7 +466,7 @@
 
         \vspace*{\stretch{3}}
 
-        \def\tabcolsep{1pt}
+        \def\tabcolsep{1bp}
         \def\arraystretch{1.3}
         \begin{tabular}{l@{\quad}l}
             \makebox[11em][s]{\ucas@label@ch@author} & \ucas@value@ch@author\\
