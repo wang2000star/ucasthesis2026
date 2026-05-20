@@ -76,7 +76,7 @@
 \tableofcontents% content catalog
 \intobmk*{\cleardoublepage}{\listfigurename}% add link to bookmark
 \listoffigures% figure catalog
-\listoftables% table catalog（接排在图目录后，不另起一页）
+{\let\clearpage\relax\let\cleardoublepage\relax\listoftables}% table catalog（紧接图目录，不换页）
 }
 \input{Tex/Prematter}% symbol list, preface content
 %-
