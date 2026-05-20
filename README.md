@@ -70,20 +70,19 @@ xelatex Thesis.tex
 
 ### 中文字体要求
 
-模板根据操作系统自动选择字体配置（通过 `fontset` 选项控制）：
-
-| 选项 | 适用平台 | 所需字体 |
-|------|---------|---------|
-| `windows` | Windows | SimSun（宋体）、SimHei（黑体）、FangSong（仿宋）、KaiTi（楷体） |
-| `mac` | macOS | Songti SC、Heiti SC、STFangsong、Kaiti SC |
-| `adobe` | 已安装 Adobe 字体的系统 | AdobeSongStd、AdobeHeitiStd、AdobeFangsongStd、AdobeKaitiStd |
-| `none` | 自定义字体目录 | 将上述 Adobe 字体放入 `./Font/` 目录 |
-
-默认选项为 `windows`。如需更改，在 `Thesis.tex` 中修改 `fontset` 参数：
+模板通过 `fontset` 选项支持以下平台配置（在 `Thesis.tex` 中设置）：
 
 ```latex
-\documentclass[fontset=mac]{Style/ucasthesis}
+\documentclass[twoside,fontset=<选项>]{Style/ucasthesis}
 ```
+
+| 选项 | 适用平台 | 使用字体 | 授权 |
+|------|---------|---------|------|
+| `windows` | Windows / Overleaf / Linux（有授权） | SimSun、SimHei、FangSong、KaiTi | 系统自带 / Overleaf 已授权 |
+| `mac` | macOS | Songti SC、Heiti SC、STFangsong、Kaiti SC | 系统自带 |
+| `fandol` | Linux（开源替代） | FandolSong、FandolHei、FandolFang、FandolKai | 开源（TeX Live 自带） |
+| `adobe` | 已安装 Adobe 字体的系统 | AdobeSongStd、AdobeHeitiStd、AdobeFangsongStd | 需自行购买 |
+| `none` | 自定义字体目录 | 将字体文件放入 `./Font/` 目录 | 由用户自行确保 |
 
 #### 检查字体是否已安装
 
@@ -104,8 +103,8 @@ fc-list | grep -i xits
 
 #### 常见问题
 
-- **Linux 用户**：系统通常不自带上述中文字体。可安装 TeX Live 自带的 Fandol 开源字体作为替代（当前模板尚未配置 Fandol fallback，后续版本将支持）。
-- **Overleaf 用户**：已预装 SimSun/SimHei/FangSong/KaiTi，无需额外配置。
+- **Linux 用户**：推荐使用 `fontset=fandol`（TeX Live 自带开源字体）。若已购买 SimSun/SimHei 授权并安装到系统，可使用 `fontset=windows`。
+- **Overleaf 用户**：平台已预装 SimSun/SimHei/FangSong/KaiTi，推荐使用 `fontset=windows`。
 - **缺失字体的后果**：编译时出现 `font-not-found` 错误，或中文显示为空白/方块。
 
 ## 项目结构

@@ -42,13 +42,15 @@
 \newif\ifartx@mac \artx@macfalse
 \newif\ifartx@adobe \artx@adobefalse
 \newif\ifartx@none \artx@nonefalse
+\newif\ifartx@fandol \artx@fandolfalse
 \newif\ifartx@times \artx@timesfalse
 \newif\ifartx@others \artx@othersfalse
 \artxifstreq{\artxfontset}{windows}{\artx@windowstrue\artx@timestrue}{%
 \artxifstreq{\artxfontset}{mac}{\artx@mactrue\artx@timestrue}{%
 \artxifstreq{\artxfontset}{adobe}{\artx@adobetrue\artx@timestrue}{%
 \artxifstreq{\artxfontset}{none}{\artx@nonetrue\artx@timestrue}{%
-\artx@otherstrue\artx@timesfalse}}}}
+\artxifstreq{\artxfontset}{fandol}{\artx@fandoltrue\artx@timestrue}{%
+\artx@otherstrue\artx@timesfalse}}}}}
 %-
 %-> LaTeX engine <pdflatex>, <lualatex>, <xelatex>
 %-
@@ -477,7 +479,20 @@
             Path=\artx@fontdir,
             Extension=.otf,
         ]
-    \fi\fi\fi\fi
+    \else\ifartx@fandol% open-source Fandol fonts for Linux
+        \setCJKmainfont{FandolSong-Regular}[
+            Extension=.otf,
+            BoldFont=FandolSong-Bold,
+            ItalicFont=FandolKai-Regular,
+        ]%
+        \setCJKsansfont{FandolHei-Regular}[
+            Extension=.otf,
+            BoldFont=FandolHei-Bold,
+        ]%
+        \setCJKmonofont{FandolFang-Regular}[
+            Extension=.otf,
+        ]%
+    \fi\fi\fi\fi\fi
 \fi
 %-
 %-> Bibliography processor and package
