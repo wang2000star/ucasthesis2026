@@ -114,6 +114,16 @@
     \artx@alphatrue
 }
 %-
+%-> GB/T standard version <2015>, <2025>
+%-
+\newif\ifartx@gbt@five \artx@gbt@fivefalse
+\DeclareOption{gbtversion=2015}{%
+    \artx@gbt@fivefalse
+}
+\DeclareOption{gbtversion=2025}{%
+    \artx@gbt@fivetrue
+}
+%-
 %-> Page layout reconfiguration
 %-
 \newif\ifartx@geometry \artx@geometryfalse
@@ -498,12 +508,28 @@
 %-> Bibliography processor and package
 %-
 \def\artxbibref{Biblio/ref.bib}% bibliography reference file
-\def\artxbibtexnum{Biblio/gbt7714-numerical}% bibtex numbers bst
-\def\artxbibtexauy{Biblio/gbt7714-author-year}% bibtex authoryear bst
+\def\artxbibtexnum{Biblio/gbt7714-numerical}% bibtex numbers bst (2015)
+\def\artxbibtexauy{Biblio/gbt7714-author-year}% bibtex authoryear bst (2015)
+\def\artxbibtexnum@five{Biblio/gbt7714-2025-numerical}% bibtex numbers bst (2025)
+\def\artxbibtexauy@five{Biblio/gbt7714-2025-author-year}% bibtex authoryear bst (2025)
 \def\artxbibtexalp{alpha}% bibtex alpha bst
-\def\artxbibernum{Biblio/gb7714-2015}% biber numbers bst
-\def\artxbiberauy{Biblio/gb7714-2015ay}% biber authoryear bst
+\def\artxbibernum{Biblio/gb7714-2015}% biber numbers bst (2015)
+\def\artxbiberauy{Biblio/gb7714-2015ay}% biber authoryear bst (2015)
+\def\artxbibernum@five{Biblio/gb7714-2025}% biber numbers bst (2025)
+\def\artxbiberauy@five{Biblio/gb7714-2025ay}% biber authoryear bst (2025)
 \def\artxbiberalp{alphabetic}% biber alpha bst
+%- Pre-select style paths based on GB/T standard version
+\ifartx@gbt@five
+    \def\artx@bibnum@cur{\artxbibtexnum@five}%
+    \def\artx@bibauy@cur{\artxbibtexauy@five}%
+    \def\artx@bibernum@cur{\artxbibernum@five}%
+    \def\artx@biberauy@cur{\artxbiberauy@five}%
+\else
+    \def\artx@bibnum@cur{\artxbibtexnum}%
+    \def\artx@bibauy@cur{\artxbibtexauy}%
+    \def\artx@bibernum@cur{\artxbibernum}%
+    \def\artx@biberauy@cur{\artxbiberauy}%
+\fi
 %- Bibtex processor + natbib package
 \ifartx@bibtex%
     % Set punctuation and mode of citation style
@@ -518,12 +544,12 @@
         \else
             \citestyle{numbers}%
         \fi
-        \bibliographystyle{\artxbibtexnum}% numbered scheme
+        \bibliographystyle{\artx@bibnum@cur}% numbered scheme
     \fi
     \ifartx@authoryear% enable author year citation style
         \RequirePackage{natbib}% author year citation mode
         \citestyle{authoryear}%
-        \bibliographystyle{\artxbibtexauy}% author year scheme
+        \bibliographystyle{\artx@bibauy@cur}% author year scheme
     \fi
     \ifartx@alpha% enable alpha citation style
         \RequirePackage[square,comma,numbers]{natbib}% alpha citation mode
@@ -541,15 +567,15 @@
     \AtEndPreamble{\RequirePackage{hyperref}}% enable biblatex detection of hyperref
     \ifartx@numbers% enable numbered citation style
         \ifartx@super% enable superscripted citation style
-            \RequirePackage[backend=biber,style=\artxbibernum,mincitenames=1,maxcitenames=2]{biblatex}%
+            \RequirePackage[backend=biber,style=\artx@bibernum@cur,mincitenames=1,maxcitenames=2]{biblatex}%
         \else
-            \RequirePackage[backend=biber,style=\artxbibernum,mincitenames=1,maxcitenames=2]{biblatex}%
+            \RequirePackage[backend=biber,style=\artx@bibernum@cur,mincitenames=1,maxcitenames=2]{biblatex}%
             \renewrobustcmd*{\citet}{\textcite}%
             \renewrobustcmd*{\citep}{\parencite}%
         \fi
     \fi
     \ifartx@authoryear% enable author year citation style
-        \RequirePackage[backend=biber,style=\artxbiberauy,mincitenames=1,maxcitenames=2]{biblatex}%
+        \RequirePackage[backend=biber,style=\artx@biberauy@cur,mincitenames=1,maxcitenames=2]{biblatex}%
             \renewrobustcmd*{\citet}{\textcite}%
             \renewrobustcmd*{\citep}{\parencite}%
     \fi

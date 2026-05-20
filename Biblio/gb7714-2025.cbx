@@ -1,13 +1,13 @@
 %%
 %% ---------------------------------------------------------------
 %% biblatex-gb7714-2015 --- A biblatex implementation of the
-%% GBT7714-2015 citation style,numerical sequence
+%% GBT7714-2025 citation style,numerical sequence
 %% Maintained by huzhenzhen
 %% E-mail: hzzmail@163.com
 %% Released under the LaTeX Project Public License v1.3c or later
 %% ---------------------------------------------------------------
 %%
-\ProvidesFile{gb7714-2015.cbx}[a biblatex citation style for GB/T 7714-2015]
+\ProvidesFile{gb7714-2025.cbx}[a biblatex citation style for GB/T 7714-2025]
 
 %
 %   加载标准样式
@@ -113,8 +113,6 @@
 %   修订使可用选项gblabelref来控制是否将标准标签中的作者加上超链接
 %   20210121,v1.0w,hzz
 %
-\iftoggle{iftlatest}%
-{%
 \renewbibmacro*{textcite}{%
   \iffieldequals{namehash}{\cbx@lasthash}
     {\usebibmacro{cite:comp}}
@@ -160,18 +158,19 @@
 %     \usebibmacro{cite:comp}%
 %     \stepcounter{textcitecount}%
 %     \savefield{namehash}{\cbx@lasthash}}}%
-}
+
 
 
 %
 %设置标注中各篇文献之间的标点
 %20210530,v1.0y,hzz
 %textcite标注命令中的标点设置
+\def\gbpunctcommacite{\addcomma}
 %\DeclareDelimFormat[textcite]{andothersdelim}{\addspace}%
-\renewcommand*{\compcitedelim}{\addcomma}%\addcomma\addthinspace
-\renewcommand*{\supercitedelim}{\addcomma}
-\DeclareDelimFormat{multicitedelimiter}{\addcomma}%新定义一个multicitedelim来区分不同标注命令下的空格处理
-\DeclareDelimFormat[parencite]{multicitedelimiter}{\addcomma\addthinspace}%太窄则用addspace
+\renewcommand*{\compcitedelim}{\gbpunctcommacite}%\addcomma\addthinspace
+\renewcommand*{\supercitedelim}{\gbpunctcommacite}
+\DeclareDelimFormat{multicitedelimiter}{\gbpunctcommacite}%新定义一个multicitedelim来区分不同标注命令下的空格处理
+\DeclareDelimFormat[parencite]{multicitedelimiter}{\gbpunctcommacite\addthinspace}%太窄则用addspace
 \renewcommand*{\multicitedelim}{\printdelim{multicitedelimiter}}
 
 %

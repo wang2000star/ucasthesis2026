@@ -11,7 +11,7 @@
 %
 %   版本和时间信息
 %
-\def\versionofgbtstyle{2020/07/21 v1.0v}
+\def\versionofgbtstyle{2025/06/10 v1.1v}
 \def\versionofbiblatex{\abx@version}
 \ProvidesFile{gb7714-2015.bbx}[\versionofgbtstyle biblatex bibliography style]
 %\RequireBiber[3]%显式指定用biber后端，当用bibtex时会报错，但其实不会影响编译，只是采用bibtex后无法达成格式需求
@@ -194,10 +194,13 @@
     %为单个条目的姓名格式控制增加nameformat和namefmtid两个域
     %为缩略信息文献表增加了shortbooktitle域
     %为多语言排序增加了lansortorder域
+    %因为language域会被clearlang选项清除，增加languageid域，类型设为field而不是list
     \DeclareDatamodelFields[type=field,datatype=literal]{mark,medium,nameformat}
     \DeclareDatamodelFields[type=field,datatype=integer]{namefmtid}
     \DeclareDatamodelFields[type=field,datatype=literal]{shortbooktitle}
     \DeclareDatamodelFields[type=field,datatype=literal]{lansortorder}
+    \DeclareDatamodelFields[type=field,datatype=literal]{languageid}
+    \DeclareDatamodelFields[type=field,datatype=integer]{refnumber}
 
     %因为biblatex更新3.14版本以后，biber对于为声明数据模型的条目类型
     %不再默认读取，而是以空字符串作为条目类型名，自然在条目定义alias时
@@ -207,11 +210,96 @@
     \DeclareDatamodelEntrytypes{newspaper}%
     }{}
 
+%%
+%%符号的垂直位置调整一下
+%% 20220625,hzz,v1.1i
+\newlength{\BracketLift}
+\setlength{\BracketLift}{0.0ex}
+%如下4个字符可以做全局性的改变，无论是在citation还是bibliography中
+\def\CharParenLeft{(}
+\def\CharParenRight{)}
+\def\CharBracketLeft{[}
+\def\CharBracketRight{]}
+%如下4个用于改变biblatex提供的括号命令中的字符的位置抬升
+\renewcommand*{\bibleftparen}{\blx@postpunct\raise\BracketLift\hbox{\CharParenLeft}}
+\renewcommand*{\bibrightparen}{\blx@postpunct\raise\BracketLift\hbox{\CharParenRight}\midsentence}
+\renewcommand*{\bibleftbracket}{\blx@postpunct\raise\BracketLift\hbox{\CharBracketLeft}}
+\renewcommand*{\bibrightbracket}{\blx@postpunct\raise\BracketLift\hbox{\CharBracketRight}\midsentence}
+%如下4个用于改变biblatex-gb7714-2015相关的括号命令中的字符的位置抬升
+\newcommand*{\gbleftparen}{\raise\BracketLift\hbox{\CharParenLeft}}
+\newcommand*{\gbrightparen}{\raise\BracketLift\hbox{\CharParenRight}}
+\newcommand*{\gbleftbracket}{\raise\BracketLift\hbox{\CharBracketLeft}}
+\newcommand*{\gbrightbracket}{\raise\BracketLift\hbox{\CharBracketRight}}
 
 
 %=====================================================================
 %   设置宏包选项
 %=====================================================================
+    %
+    %   增加一个控制是否输出与author相同的editor或bookauthor的选项
+    %   20240517,v1.1r,hzz
+    \newtoggle{bbx:gbnosameeditor}
+    \DeclareBibliographyOption{gbnosameeditor}[false]{%biblatex低版本
+      \settoggle{bbx:gbnosameeditor}{#1}}
+    \ExecuteBibliographyOptions{gbnosameeditor}
+
+    %
+    %   增加一个控制是否输出and others信息的选项
+    %   20240315,v1.1p,hzz
+    \newtoggle{bbx:gbnoothers}
+    \DeclareBibliographyOption{gbnoothers}[false]{%biblatex低版本
+      \settoggle{bbx:gbnoothers}{#1}}
+    \ExecuteBibliographyOptions{gbnoothers}
+
+    %
+    %   增加一个控制是否调整日期输出位置的选项mergedate
+    %   为兼容性考虑，但实际不产生作用了，因为如果要使用ay样式可以直接从bibstyle进入
+    %   因为使用string所以只适用于biblatex3.3以上版本
+    %   20210415,v1.0y,hzz
+    \DeclareBibliographyOption[string]{mergedate}[none]{%
+      \ifcsdef{bbx@opt@mergedate@#1}
+        {\csuse{bbx@opt@mergedate@#1}}
+        {}}
+    \ExecuteBibliographyOptions{mergedate}
+
+    \def\bbx@opt@mergedate@none{}%none就是正常的顺序编码样式
+    \def\bbx@opt@mergedate@true{}%none就是正常的顺序编码样式
+    \def\bbx@opt@mergedate@false{}%none就是正常的顺序编码样式
+
+
+    %
+    %   增加一个控制是否输出恢复传统crossref作用的选项
+    %   20210216,v1.0w,hzz
+    \newtoggle{bbx:citexref}
+    \DeclareBibliographyOption{citexref}[true]{%
+    \settoggle{bbx:citexref}{#1}}
+    \ExecuteBibliographyOptions{citexref}
+
+    \newbibmacro*{citexref}{%
+      \printtext[bibhyperref]{%
+        \printfield{labelprefix}%
+        \printfield{labelnumber}%
+        \ifbool{bbx:subentry}
+          {\printfield{entrysetcount}}
+          {}}}
+
+    \DeclareCiteCommand{\bbx@xrefcite}[\mkbibbrackets]%
+      {\boolfalse{citetracker}%
+       \boolfalse{pagetracker}%
+       \boolfalse{backtracker}}
+      {\usebibmacro{citexref}}
+      {}
+      {}
+
+    \newbibmacro*{crosscite}[1]{%
+      \iftoggle{bbx:citexref}
+        {\iffieldundef{crossref}
+           {\iffieldundef{xref}
+              {\usebibmacro{#1}}
+              {\printtext{\bbx@xrefcite{\thefield{xref}}}}}
+           {\printtext{\bbx@xrefcite{\thefield{crossref}}}}}
+        {\usebibmacro{#1}}}
+
     %
     %   增加一个控制是否输出文献载体的选项
     %   20191125,v1,0s,hzz
@@ -231,7 +319,7 @@
 	%用于在文献条目后面输出注释信息的宏
     %FieldFormat{annotation}用于设置注释信息的格式
 	\DeclareFieldFormat{annotation}{%
-		\printtext{\addspace(#1)}%
+		\printtext{\addspace\gbleftparen#1\gbrightparen}%
 	}
 	\renewbibmacro*{annotation}{%
 		\iftoggle{bbx:gbannote}%
@@ -265,20 +353,25 @@
     %   当前面的脚注中已经存在当前文献，那么当前文献内容不再输出而用同(4)这样的方式
     %   需要注意的是由于小页环境和表格中的脚注本身的问题，可能会有一些问题
     \DeclareBibliographyOption{gbfootbib}[false]{%
-      \ifstrequal{#1}{false}{}{\execgbfootbib}}
+      \ifstrequal{#1}{false}{}{\execgbfootbib\execgbfootbibfmt}}
     \ExecuteBibliographyOptions{gbfootbib}
+    %
+    %   增加一个选项，用于控制分离后的脚注的格式
+    %   20220829,v1.1j,hzz
+    %   将原来的一个gbfootbib选项控制所有格式分离为由两个选项gbfootbib和gbfootbibfmt控制
+    %   分离后，gbfootbibfmt实现同(4)这样的方式，gbfootbib则实现全部的格式
+    \DeclareBibliographyOption{gbfootbibfmt}[false]{%
+      \ifstrequal{#1}{false}{}{\execgbfootbib}}
+    \ExecuteBibliographyOptions{gbfootbibfmt}
 
     %%
     \newlength{\footbibmargin}
     \newlength{\footbiblabelsep}
     \setlength{\footbibmargin}{1em}%脚注的段落左侧缩进距离
     \setlength{\footbiblabelsep}{0.5em}%脚注中标记号与脚注段落的间距
-    \def\execgbfootbib%
-    {%
-    %开启引用跟踪计数器，为使用\ifciteseen等测试命令
-    \ExecuteBibliographyOptions{citetracker=true}
-    %
-    %利用footmisc宏包来实现脚注文献的悬挂对齐
+
+    \def\execgbfootbibfmt%
+    {%利用footmisc宏包来实现脚注文献的悬挂对齐
     \AtEndPreamble{
     \@ifclassloaded{beamer}{}{
     %beamer类因为其特殊性，为避免冲突不调footmisc。
@@ -294,7 +387,7 @@
     \iftoggle{bbx:gbfnperpage}%
     {\@addtoreset{footnote}{page}}{}%重设计数器
 
-\@ifpackageloaded{hyperref}{%加载hyperref则对\H@@footnotetext做重定义
+    \@ifpackageloaded{hyperref}{%加载hyperref则对\H@@footnotetext做重定义
     \long\def\H@@footnotetext##1{\insert\footins{%
     \reset@font\footnotesize
     \interlinepenalty\interfootnotelinepenalty
@@ -371,6 +464,12 @@
     }%
     }{}{}
     }
+    }
+
+    \def\execgbfootbib%
+    {%
+    %开启引用跟踪计数器，为使用\ifciteseen等测试命令
+    \ExecuteBibliographyOptions{citetracker=true}
 
     %
     %判断当前文献是否已经引用过且是做的footfullcite(即已经作为脚注输出文献内容)
@@ -384,11 +483,11 @@
     \@makefnmark%
             }}%
             {\csxdef{sec\arabic{refsection}\arabic{page}et\thefield{entrykey}}{%
-            \ifcsstring{@mpfn}{mpfootnote}{\@alph\c@mpfootnote}{\thefootnote}%
+            \ifcsstring{@mpfn}{mpfootnote}{\thempfootnote}{\thefootnote}%
             }}%
         }%
         {\csxdef{sec\arabic{refsection}\arabic{page}et\thefield{entrykey}}{%
-        \ifcsstring{@mpfn}{mpfootnote}{\@alph\c@mpfootnote}{\thefootnote}%
+        \ifcsstring{@mpfn}{mpfootnote}{\thempfootnote}{\thefootnote}%
         %判断在minipage中比较麻烦，这里使用\@mpfn的定义进行判断
         }}%
     }
@@ -410,7 +509,6 @@
       }%
       {\multicitedelim}%
       {\usebibmacro{postnote}}
-
     }
 
     %
@@ -468,6 +566,13 @@
     \def\str@mathesiscn{硕士学位论文}
     \def\str@phdthesiscn{博士学位论文}
     \def\str@editorcn{主编}
+    \def\str@editorscn{主编}
+    \def\str@compilerscn{整理}
+    \def\str@compilercn{整理}
+    \def\str@revisercn{编}
+    \def\str@reviserscn{编}
+    \def\str@foundercn{编著}
+    \def\str@founderscn{编著}
 
     \AtEndOfPackage{%
 	\iftoggle{bbx:codegbk}{%
@@ -510,6 +615,8 @@
     \DeclareBibliographyOption{gbctexset}[true]{%
       \settoggle{bbx:ctexset}{#1}}
     \ExecuteBibliographyOptions{gbctexset}
+    \providecommand{\bibname}{参考文献}
+    \providecommand{\refname}{参考文献}
 
     \AtEndOfPackage{%
 	\iftoggle{bbx:ctexset}{%
@@ -548,7 +655,7 @@
     %   增加一个出版项自动处理控制选项，当true时使用出版者不详等信息补充缺失的出版信息。
     %
     \newtoggle{bbx:gbpub}
-    \DeclareBibliographyOption{gbpub}[true]{%
+    \DeclareBibliographyOption{gbpub}[false]{%
         %\settoggle{bbx:gbpub}{#1} %或采用下面这一句
         \ifstrequal{#1}{false}{\togglefalse{bbx:gbpub}}{\toggletrue{bbx:gbpub}}}
     \ExecuteBibliographyOptions{gbpub}
@@ -577,6 +684,7 @@
       maxitems     = 1,%设置列表最大数量
       minitems     = 1, %设置缩减后的列表最小数量
       isbn=false,
+      usetranslator=true,
     }
 
     %
@@ -604,7 +712,10 @@
     %为数字标签格式选择增加的计数器/命令
     \newcommand{\mkgbnumlabel}[1]{\mkbibbrackets{#1}}
     \def\gbbiblabelopt@bracket{\renewcommand{\mkgbnumlabel}[1]{\mkbibbrackets{##1}}}
+    \def\gbbiblabelopt@bracketqj{\renewcommand{\mkgbnumlabel}[1]{【##1】}}
+    \def\gbbiblabelopt@quanjiao{\renewcommand{\mkgbnumlabel}[1]{【##1】}}
     \def\gbbiblabelopt@parens{\renewcommand{\mkgbnumlabel}[1]{\mkbibparens{##1}}}
+    \def\gbbiblabelopt@parensqj{\renewcommand{\mkgbnumlabel}[1]{（##1）}}
     \def\gbbiblabelopt@dot{\renewcommand{\mkgbnumlabel}[1]{##1\adddot}}
     \def\gbbiblabelopt@plain{\renewcommand{\mkgbnumlabel}[1]{##1}}
     \def\gbbiblabelopt@box{\renewcommand{\mkgbnumlabel}[1]{\framebox{##1}}}
@@ -667,6 +778,7 @@
     %
     \DeclareBibliographyOption[string]{gbcitelocal}[gb7714-2015]{%
         \ifstrequal{#1}{gb7714-2015}{\setcounter{gbcitelocalcase}{0}}{}%
+        \ifstrequal{#1}{gb7714}{\setcounter{gbcitelocalcase}{0}}{}%
         \ifstrequal{#1}{chinese}{\setcounter{gbcitelocalcase}{1}}{}%
         \ifstrequal{#1}{english}{\setcounter{gbcitelocalcase}{2}}{}%
     }
@@ -674,6 +786,7 @@
 
     \DeclareBibliographyOption[string]{gbbiblocal}[gb7714-2015]{%
         \ifstrequal{#1}{gb7714-2015}{\setcounter{gbbiblocalcase}{0}}{}%
+        \ifstrequal{#1}{gb7714}{\setcounter{gbbiblocalcase}{0}}{}%
         \ifstrequal{#1}{chinese}{\setcounter{gbbiblocalcase}{1}}{}%
         \ifstrequal{#1}{english}{\setcounter{gbbiblocalcase}{2}}{}%
     }
@@ -701,9 +814,11 @@
         \ifstrequal{#1}{uppercase}{\setcounter{gbnamefmtcase}{0}}{}%
         \ifstrequal{#1}{lowercase}{\setcounter{gbnamefmtcase}{1}}{}%
         \ifstrequal{#1}{givenahead}{\setcounter{gbnamefmtcase}{2}}{}%given-family
-        \ifstrequal{#1}{familyahead}{\setcounter{gbnamefmtcase}{3}}{}
-        \ifstrequal{#1}{pinyin}{\setcounter{gbnamefmtcase}{4}}{}%family-given
+        \ifstrequal{#1}{familyahead}{\setcounter{gbnamefmtcase}{3}}{}%family-given
+        \ifstrequal{#1}{pinyin}{\setcounter{gbnamefmtcase}{4}}{}
         \ifstrequal{#1}{reverseorder}{\setcounter{gbnamefmtcase}{5}}{}%family-given/given-family
+        \ifstrequal{#1}{quanpin}{\setcounter{gbnamefmtcase}{6}}{}%全拼
+        \ifstrequal{#1}{fullname}{\setcounter{gbnamefmtcase}{7}}{}%英文的全拼，名在前-姓在后
     }
     \ExecuteBibliographyOptions{gbnamefmt}
 
@@ -715,7 +830,11 @@
         \ifstrequal{#1}{right}{\setcounter{gbalignlabel}{0}}{}
         \ifstrequal{#1}{left}{\setcounter{gbalignlabel}{1}}{}
         \ifstrequal{#1}{center}{\setcounter{gbalignlabel}{2}}{}
+        \ifstrequal{#1}{centpos}{\setcounter{gbalignlabel}{3}}{}
         \ifstrequal{#1}{gb7714-2015}{\setaligngbstyle}{}
+        \ifstrequal{#1}{gb7714}{\setaligngbstyle}{}
+        \ifstrequal{#1}{gb7714-2015ay}{\setaligngbstyleay}{}
+        \ifstrequal{#1}{gb7714ay}{\setaligngbstyleay}{}
     }
   }
   {% 针对biblatex<3.3版本的选项设置
@@ -744,6 +863,7 @@
         \ifstrequal{#1}{familyahead}{\setcounter{gbnamefmtcase}{3}}{}
         \ifstrequal{#1}{pinyin}{\setcounter{gbnamefmtcase}{4}}{}%family-given
         \ifstrequal{#1}{reverseorder}{\setcounter{gbnamefmtcase}{5}}{}%family-given/given-family
+        \ifstrequal{#1}{quanpin}{\setcounter{gbnamefmtcase}{6}}{}%family-given
     }
     \ExecuteBibliographyOptions{gbnamefmt}
 
@@ -757,7 +877,11 @@
         \ifstrequal{#1}{right}{\setcounter{gbalignlabel}{0}}{}
         \ifstrequal{#1}{left}{\setcounter{gbalignlabel}{1}}{}
         \ifstrequal{#1}{center}{\setcounter{gbalignlabel}{2}}{}
+        \ifstrequal{#1}{centpos}{\setcounter{gbalignlabel}{3}}{}
         \ifstrequal{#1}{gb7714-2015}{}{}
+        \ifstrequal{#1}{gb7714}{}{}
+        \ifstrequal{#1}{gb7714-2015ay}{\setaligngbstyleay}{}
+        \ifstrequal{#1}{gb7714ay}{\setaligngbstyleay}{}
     }
   }
 
@@ -836,6 +960,14 @@
     \NewBibliographyString{phdthesiscn}
     \NewBibliographyString{editorcn}
     \NewBibliographyString{editorscn}
+    \NewBibliographyString{bytranslatorcn}
+    \NewBibliographyString{compilercn}
+    \NewBibliographyString{compilerscn}
+    \NewBibliographyString{revisercn}
+    \NewBibliographyString{reviserscn}
+    \NewBibliographyString{foundercn}
+    \NewBibliographyString{founderscn}
+
 
 
 
@@ -849,11 +981,12 @@
     \DefineBibliographyStrings{english}{
         bibliography     = {\str@bibliography},
         references       = {\str@references},
-        bytranslator= {\str@bytranslator},%\addperiod，%将trans. by 改成 译\addcomma\
+        bytranslatorcn = {\str@bytranslator},%\addperiod，%将trans. by 改成 译\addcomma\
+        byeditor={\iffieldequalstr{userd}{chinese}{\str@editorcn}{ed\adddotspace by}},
         and         = {\addcomma},%将第2和3人名间的and符号改成逗号，用\finalnamedelim命令也可以定义，参见3.9.1节
         andcn       = {\addcomma},%and本地化字符串的中文对应词
         andincitecn = {\str@andcn},%将标注中的分开，便于与文献表中的区分
-        andincite   = {\addcomma},
+        andincite   = {\addcomma\space},%注意add开头的命令会其把前面的空格去掉
         %andothers   = {et al.},%将超过3个人名的省略，et al.改成为 等
         andotherscn   = {\str@andotherscn},%将超过3个人名的省略，et al.改成为 等
         andothersincitecn={\str@andotherscn},%将标注中的分开，便于与文献表中的区分
@@ -873,6 +1006,12 @@
        phdthesiscn={\str@phdthesiscn},
        editorscn={\str@editorcn},
        editorcn={\str@editorcn},
+       compilerscn={\str@compilerscn},
+       compilercn={\str@compilercn},
+       reviserscn={\str@reviserscn},
+       revisercn={\str@revisercn},
+       founderscn={\str@founderscn},
+       foundercn={\str@foundercn},
 }
 
     %
@@ -948,21 +1087,17 @@
 
 \DeclareSourcemap{
 \maps[datatype=bibtex]{%
-        \map{%当没有作者时将editor转成author
-        \pernottype{inbook}%因为in系列中editor可能用来表示bookauthor，所以排除
-        \pernottype{inproceedings}
-        \pernottype{incollection}
-        \pernottype{periodical}%因为peridical直接使用editor，所以排除
-        %注意notfield在低版本biblatex中没有
-        %\step[notfield=author,final]%当author不存在，将editor复制给author
-        \step[fieldsource=editor,fieldtarget=author]%并删除editor
+        \map{%如果author或者editor或者translator存在，那么设置namea便于后面判断。
+            \step[fieldsource=author,final]
+            \step[fieldset=namea,origfieldval]
         }
-        \map{%当没有作者时将translator转成author
-        \pernottype{inbook}
-        \pernottype{inproceedings}
-        \pernottype{incollection}
-        %\step[notfield=author,final]%当author不存在，将translator复制给author
-        \step[fieldsource=translator,fieldtarget=author]%并删除translator
+        \map{%
+            \step[fieldsource=editor,final]
+            \step[fieldset=namea,origfieldval]
+        }
+        \map{%
+            \step[fieldsource=translator,final]
+            \step[fieldset=namea,origfieldval]
         }
         \map{%让address和location同步，biblatex中address是location的别名
         %因此输出的时候只有location信息，但处理过程中是可以存在address的。
@@ -974,6 +1109,11 @@
         %\step[notfield=location,final]
         \step[fieldsource=address,final]
         \step[fieldset=location,origfieldval]
+        }
+        \map{%eventtitle映射为booktitle
+            \pertype{inproceedings}
+            \step[fieldsource=eventtitle,final]
+            \step[fieldsource=techreport, fieldtarget=booktitle]
         }
         \map{%处理在bib文件用mark标记文献类型标识符的情况
             \step[fieldsource=mark,final]
@@ -995,9 +1135,18 @@
             \step[fieldsource=nameformat,match=pinyin,final]
             \step[fieldset=namefmtid,fieldvalue={4}]
             }
+        \map{%处理在bib文件中直接给出文献的姓名格式为全拼的情况
+            \step[fieldsource=nameformat,match=quanpin,final]
+            \step[fieldset=namefmtid,fieldvalue={6}]
+            }
         \map{%根据article确定文献类型标识符
             \pertype{article}
             \step[fieldset=usera, fieldvalue={J}]
+            }
+        \map{%article给出eid时做pages处理
+            \pertype{article}
+            \step[fieldsource=eid,final]
+            \step[fieldset=pages, origfieldval]
             }
         \map{%根据periodical确定文献类型标识符
             \pertype{periodical}
@@ -1007,10 +1156,34 @@
             \step[fieldsource=publisher] %有时会把publisher和institution混淆，处理后使用institution
             \step[fieldset=institution, origfieldval]
             }
-        \map{%根据增加一个新闻报纸的类型newspaper确定文献类型标识符
+        \map[overwrite]{%根据增加一个新闻报纸的类型newspaper确定文献类型标识符
             \pertype{newspaper}
             \step[fieldset=usera, fieldvalue={N}]
-            \step[fieldset=note, fieldvalue=news]%因为没有专门的驱动，记录note方便映射为article后判断
+            \step[fieldset=entrysubtype, fieldvalue=news]%因为没有专门的驱动，记录note方便映射为article后判断
+            }
+        \map[overwrite]{%
+            \pertype{article}
+            \step[fieldsource=note,match=\regexp{(n|N)(e|E)(w|W)(s|S)},final]%
+            \step[fieldset=usera, fieldvalue={N}]
+            \step[fieldset=entrysubtype, fieldvalue=news]%
+            }
+        \map[overwrite]{%
+            \pertype{article}
+            \step[fieldsource=note,match=\regexp{(n|N)(e|E)(w|W)(s|S)(p|P)(a|A)(p|P)(e|E)(r|R)},final]%
+            \step[fieldset=usera, fieldvalue={N}]
+            \step[fieldset=entrysubtype, fieldvalue=news]%
+            }
+        \map[overwrite]{%
+            \pertype{article}
+            \step[fieldsource=entrysubtype,match=\regexp{(n|N)(e|E)(w|W)(s|S)(p|P)(a|A)(p|P)(e|E)(r|R)},final]%
+            \step[fieldset=usera, fieldvalue={N}]
+            \step[fieldset=entrysubtype, fieldvalue=news]%
+            }
+        \map[overwrite]{%
+            \pertype{article}
+            \step[fieldsource=entrysubtype,match=\regexp{(n|N)(e|E)(w|W)(s|S)},final]%
+            \step[fieldset=usera, fieldvalue={N}]
+            \step[fieldset=entrysubtype, fieldvalue=news]%
             }
         \map{%对应增加的一个数据库类型database确定文献类型标识符
             \pertype{database}
@@ -1036,6 +1209,11 @@
             \step[fieldsource=publisher] %有时会把publisher和institution混淆，处理后使用institution
             \step[fieldset=institution, origfieldval]
             }
+        \map{
+            \pertype{legislation}
+            \step[typesource=legislation, typetarget=archive]
+            \step[fieldset=entrysubtype, fieldvalue=legislation]%
+            }
         \map{%对应增加的一个档案类型archive确定文献类型标识符
             \pertype{archive}
             \step[fieldset=usera, fieldvalue={A}]
@@ -1052,6 +1230,10 @@
             \pertype{misc}
             \step[fieldset=usera, fieldvalue={Z}]%
             }
+        \map{\pertype{mvbook}
+            \step[typesource=mvbook,typetarget=book]
+            \step[fieldset=usera, fieldvalue={M}]%
+            }
         \map{
             \pertype{book}
             \pertype{inbook}
@@ -1059,10 +1241,24 @@
             \step[fieldsource=version] %有时会把version和edition混淆，处理后直接用edition
             \step[fieldset=edition, origfieldval]
             }
-        \map{%兼容老的standard类型，确定文献类型标识符
+        \map[overwrite]{%兼容老的standard类型，确定文献类型标识符
             \pertype{standard}
             \step[fieldset=usera, fieldvalue={S}]
-            \step[fieldset=note, fieldvalue=standard]%因为没有专门的驱动，记录note方便映射为book和inbook后判断
+            \step[fieldset=entrysubtype, fieldvalue=standard]%因为没有专门的驱动，记录note方便映射为book和inbook后判断
+            }
+        \map[overwrite]{%根据standard
+            \pertype{inbook}
+            \pertype{book}
+            \step[fieldsource=entrysubtype,match=\regexp{(s|S)(t|T)(a|A)(n|N)(d|D)(a|A)(r|R)(d|D)},final]%\x80-\xFF
+            \step[fieldset=usera, fieldvalue={S}]
+            \step[fieldset=entrysubtype, fieldvalue=standard]%
+            }
+        \map[overwrite]{%根据standard
+            \pertype{inbook}
+            \pertype{book}
+            \step[fieldsource=note,match=\regexp{(s|S)(t|T)(a|A)(n|N)(d|D)(a|A)(r|R)(d|D)},final]%\x80-\xFF
+            \step[fieldset=usera, fieldvalue={S}]
+            \step[fieldset=entrysubtype, fieldvalue=standard]%
             }
         \map{
             \pertype{patent}
@@ -1289,32 +1485,56 @@
             %这里为兼容3.11及以下版本，所以用一个复杂一点的正则表达式
             \step[fieldsource=language,match=\regexp{(e|E)(n|N)(g|G)(l|L)(i|I)(s|S)(h|H)},final]
             \step[fieldset=langid,fieldvalue={english}]
+            \step[fieldset=languageid,fieldvalue={english}]
             \step[fieldset=lansortorder,fieldvalue=\lanenorder]
             }
         \map{
             \step[fieldsource=language,match=\regexp{(r|R)(u|U)(s|S)(s|S)(i|I)(a|A)(n|N)},final]
             \step[fieldset=langid,fieldvalue={russian}]
+            \step[fieldset=languageid,fieldvalue={russian}]
             \step[fieldset=lansortorder,fieldvalue=\lanruorder]
             }
         \map{%
             \step[fieldsource=language,match=\regexp{(f|F)(r|R)(e|E)(n|N)(c|C)(h|H)},final]
             \step[fieldset=langid,fieldvalue={french}]
+            \step[fieldset=languageid,fieldvalue={french}]
             \step[fieldset=lansortorder,fieldvalue=\lanfrorder]
             }
         \map{%
             \step[fieldsource=language,match=\regexp{(c|C)(h|H)(i|I)(n|N)(e|E)(s|S)(e|E)},final]%中日韩语目前都用english，
             \step[fieldset=langid,fieldvalue={english}]
+            \step[fieldset=languageid,fieldvalue={chinese}]
             \step[fieldset=lansortorder,fieldvalue=\lancnorder]
             }
         \map{%
             \step[fieldsource=language,match=\regexp{(j|J)(a|A)(p|P)(a|A)(n|N)(e|E)(s|S)(e|E)},final]%中日韩语目前都用english，
             \step[fieldset=langid,fieldvalue={english}]
+            \step[fieldset=languageid,fieldvalue={japanese}]
             \step[fieldset=lansortorder,fieldvalue=\lanjporder]
             }
         \map{%
             \step[fieldsource=language,match=\regexp{(k|K)(o|O)(r|R)(e|E)(a|A)(n|N)},final]%中日韩语目前都用english，
             \step[fieldset=langid,fieldvalue={english}]
+            \step[fieldset=languageid,fieldvalue={korean}]
             \step[fieldset=lansortorder,fieldvalue=\lankrorder]
+            }
+        \map[overwrite]{%bib中abstract和howpublished常出现特殊字符这里做一下预处理。
+            \step[fieldsource={howpublished}, match=\regexp{([^\\])\%}, replace=\regexp{$1\\\%}]
+            }
+        \map[overwrite]{
+            \step[fieldsource={abstract}, match=\regexp{([^\\])\%}, replace=\regexp{$1\\\%}]
+            }
+        \map[overwrite]{
+            \step[fieldsource={howpublished}, match=\regexp{([^\\])\#}, replace=\regexp{$1\\\#}]
+            }
+        \map[overwrite]{
+            \step[fieldsource={abstract}, match=\regexp{([^\\])\#}, replace=\regexp{$1\\\#}]
+            }
+        \map[overwrite]{%&符号处理
+            \step[fieldsource={abstract}, match=\regexp{([^\\])\x26}, replace=\regexp{$1\\\x26}]
+            }
+        \map[overwrite]{%&符号处理
+            \step[fieldsource={howpublished}, match=\regexp{([^\\])\x26}, replace=\regexp{$1\\\x26}]
             }
 }
 }
@@ -1357,7 +1577,7 @@
             %\step[notfield=address,final]%当address不存在则继续
             \step[fieldsource=url,final]%地址不存在且存在url那么转变为online
             \step[typesource=report,typetarget=online]
-            \step[fieldset=note,fieldvalue={report}]
+            \step[fieldset=entrysubtype,fieldvalue={report}]
             }
             \map{%
             \pertype{thesis}
@@ -1440,7 +1660,7 @@
             \step[typesource=archive,typetarget=online]
             }
             \map[overwrite]{%这里还必须有overwrite，注意不同版本存在差异，比如texlive2015变16后biber有变化(20161207修改正确)
-            \step[fieldsource=note, final]%将note域信息复制给keywords，用于输出时容易区分标准和报纸
+            \step[fieldsource=entrysubtype, final]%将note域信息复制给keywords，用于输出时容易区分标准和报纸
             \step[fieldset=keywords, fieldvalue={,}, append]
             \step[fieldset=keywords, origfieldval, append]
             }
@@ -1465,7 +1685,7 @@
             \map[overwrite]{
             \step[fieldsource={location}, match=\regexp{([^\\])\x26}, replace=\regexp{$1\\\x26}]
             }
-            \map[overwrite]{
+            \map[overwrite]{%&符号处理
             \step[fieldsource={institution}, match=\regexp{([^\\])\x26}, replace=\regexp{$1\\\x26}]
             }
             \map[overwrite]{
@@ -1515,7 +1735,7 @@
             %\step[notfield=address,final]%当address不存在则继续
             \step[fieldsource=url,final]%地址不存在且存在url那么转变为online
             \step[typesource=report,typetarget=online]
-            \step[fieldset=note,fieldvalue={report}]
+            \step[fieldset=entrysubtype,fieldvalue={report}]
             }
             \map{%
             \pertype{thesis}
@@ -1598,7 +1818,7 @@
             \step[typesource=archive,typetarget=online]
             }
             \map[overwrite]{%这里还必须有overwrite，注意不同版本存在差异，比如texlive2015变16后biber有变化(20161207修改正确)
-            \step[fieldsource=note, final]%将note域信息复制给keywords，用于输出时容易区分标准和报纸
+            \step[fieldsource=entrysubtype, final]%将note域信息复制给keywords，用于输出时容易区分标准和报纸
             \step[fieldset=keywords, fieldvalue={,}, append]
             \step[fieldset=keywords, origfieldval, append]
             }
@@ -1654,6 +1874,54 @@
           }
       }
   }
+}
+%用于人工的为条目或条目集添加域
+\newcommand{\addEntryField}[3]{%
+    \edef\entrykeya{#1}%
+    \edef\entrykeyb{#2}%
+    \edef\entrykeyc{#3}%
+    \ifstrempty{#1}
+    {\DeclareStyleSourcemap{
+          \maps[datatype=bibtex]{
+            \map{
+              \step[fieldset=\entrykeyb, fieldvalue=\entrykeyc]
+            }
+          }
+       }%
+    }
+    {\DeclareStyleSourcemap{
+          \maps[datatype=bibtex]{
+            \map[foreach={#1}]{
+              \step[fieldsource=entrykey, match=\regexp{$MAPLOOP}, final]
+              \step[fieldset=\entrykeyb, fieldvalue=\entrykeyc]
+            }
+          }
+       }%
+    }%
+}
+
+%用于人工的为条目或条目集删除域
+\newcommand{\delEntryField}[2]{%
+  \edef\entrykeya{#1}%
+  \edef\entrykeyb{#2}%
+  \ifstrempty{#1}
+    {\DeclareStyleSourcemap{
+          \maps[datatype=bibtex,overwrite]{
+            \map{
+              \step[fieldset=\entrykeyb, null]
+            }
+          }
+       }%
+    }
+    {\DeclareStyleSourcemap{
+          \maps[datatype=bibtex,overwrite]{
+            \map[foreach={#1}]{
+              \step[fieldsource=entrykey, match=\regexp{$MAPLOOP}, final]
+              \step[fieldset=\entrykeyb, fieldvalue={}]
+            }
+          }
+       }%
+    }%
 }
 
 %
@@ -1969,30 +2237,39 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
 %=====================================================================
 %   参考文献表环境
 %=====================================================================
+\AtBeginBibliography{%
+\hyphenpenalty=100 %断词阈值，值越大越不容易出现断词
+\tolerance=8000 %丑度， 10000为最大无溢出盒子，参考the texbook 第6章
+\hbadness=5000 %如果丑度超过hbadness这一阀值，那么就会发出警告
+\interlinepenalty=100\relax%
+\widowpenalty=100\relax%
+\clubpenalty=100\relax%
+} %设置断行阈值，避免行溢出
 %
 %   列表格式
 %
 %   增加一个\bibitemindent尺寸用于控制list环境的itemindent
 %   v1.0l，20180615，hzz
 %   v1.0t,20200319,hzz,增加尺寸\biblabelextend使某些字体下标签宽度不足时可增加标签宽度
-\setlength{\bibhang}{\biblabelsep}%
 \newlength{\bibitemindent}
 \setlength{\bibitemindent}{0pt}
 \newlength{\biblabelextend}
 \setlength{\biblabelextend}{0pt}
-
-
+\newlength{\bibextramargin}
+\setlength{\bibextramargin}{0em}%
 \defbibenvironment{bibliography}
   {\list
      {\printtext[labelnumberwidth]{%
         \printfield{labelprefix}%
         \printfield{labelnumber}}}
      {\addtolength{\labelnumberwidth}{\biblabelextend}%
-     \setlength{\labelwidth}{\labelnumberwidth}%
+      \setlength{\labelwidth}{\labelnumberwidth}%
       \setlength{\labelsep}{\biblabelsep}%
-      \setlength{\leftmargin}{\bibhang}%
+      \setlength{\leftmargin}{\bibextramargin}%
+      \addtolength{\leftmargin}{\biblabelsep}%
       \addtolength{\leftmargin}{\labelnumberwidth}%
-      \setlength{\itemindent}{\bibitemindent}%
+      \setlength{\itemindent}{0pt}%
+      \addtolength{\itemindent}{\bibitemindent}%
       \setlength{\itemsep}{\bibitemsep}%
       \setlength{\parsep}{\bibparsep}}%
       \renewcommand*{\makelabel}[1]{\hss##1}}
@@ -2018,11 +2295,15 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
     \mkgbnumlabel{#1}\hfill%
 \or%中间对齐，比如：序号数字居于[]中间
     \hfil\mkgbnumlabel{\hfill#1\hfill}\hfil%
+\or%中间对齐，但是整个标签位于中间，比如：[1]位于中间
+    \hfil\mkgbnumlabel{#1}\hfil%
 \fi}
 
 %
 %   修改序号标签格式为以各条参文献为基础进行对齐的方式，即序号与条目内容间隔相等的方式。
 \def\setaligngbstyle{%
+\setlength{\bibitemindent}{0pt}%
+\setlength{\bibextramargin}{0pt}%
 \def\blx@bibitem##1{%
   \blx@ifdata{##1}
     {\begingroup
@@ -2057,12 +2338,13 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
 \newcommand{\itemcmd}{%
 \settowidth{\lengthid}{\mkgbnumlabel{\printfield{labelnumber}}}
 \addtolength{\lengthid}{\biblabelsep}
+\addtolength{\lengthid}{\bibextramargin}
 \setlength{\lengthlw}{\textwidth}
 \addtolength{\lengthlw}{-\lengthid}
 \addvspace{\bibitemsep}%恢复\bibitemsep的作用
 %\parshape 2 0em \textwidth \lengthid \lengthlw
 \hangindent\lengthid
-\mkgbnumlabel{\printfield{labelnumber}}%
+\leavevmode\hspace{\bibitemindent}\mkgbnumlabel{\printfield{labelnumber}}%
 \hspace{\biblabelsep}}
 %
 %   简单的段落环境
@@ -2071,6 +2353,24 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
 {\endgroup}
 {\itemcmd}}
 
+%
+%   增加一个作者年制文献表格式的文献表输出环境。
+%   20210411,hzz,v1.0x
+\def\setaligngbstyleay{%
+\setlength{\bibhang}{1em}
+\setlength{\bibitemindent}{0pt}
+\setlength{\bibitemsep}{4.5pt}
+\defbibenvironment{bibliography}
+  {\list
+     {}
+     {\setlength{\leftmargin}{\bibhang}%
+      \setlength{\itemindent}{-\bibhang}%
+      \addtolength{\itemindent}{\bibitemindent}%
+      \setlength{\itemsep}{\bibitemsep}%
+      \setlength{\parsep}{\bibparsep}}}
+  {\endlist}
+  {\item}
+}
 
 %=====================================================================
 %   设置单元或块等的标点
@@ -2085,11 +2385,14 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
 %   这里调整一下两种语言参考文献的间隔，源来自biblatex.def
 \renewcommand*{\entrysetpunct}{\adddot\newline\nobreak}
 \renewcommand*{\bibpagespunct}{\addcolon\addthinspace}%%页码引用格式的修改，修改为用冒号
+%    2021.08.19，增加出版地和出版社之间的标点，hzz
+\newcommand{\publocpunct}{\addcolon\addspace}%出版项中：出版社地址后面的标点
 %\renewcommand{\relateddelim}{}%\par
 
 %=====================================================================
 %   修改域的格式，重定义域的输出宏
 %=====================================================================
+\DeclareDelimFormat{titletypedelim}{\allowbreak} %标题内容和文献标识符之间的标点
 %
 %   新增文献类型标识符的格式
 %   []前的nobreak，从GB4.1节的例子看不应该加，所以去掉
@@ -2099,15 +2402,15 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
 \DeclareFieldFormat{gbtypeflag}{%
 \iftoggle{bbx:gbmedium}%
 {\iftoggle{bbx:url}%
-    {\iffieldundef{url}%当存在url时，增加一个OL标识符
-        {\nobreak\printtext{[}\nobreak#1\nobreak\printtext{\iffieldundef{medium}{}{\texttt{/}\thefield{medium}}]}}%
-        {\nobreak\printtext{[}\nobreak#1\nobreak\printtext{\texttt{/}OL]}}%
+    {\ifboolexpr{ test {\iffieldundef{url}} and test {\iffieldundef{doi}} and test {\iffieldundef{eprint}} }%\iffieldundef{url}%当存在url时，增加一个OL标识符->改为当存在doi或eprint或url时增加OL标识符
+        {\printdelim{titletypedelim}\printtext{\gbleftbracket}\nobreak#1\nobreak\printtext{\iffieldundef{medium}{}{{\SlashFont/}\thefield{medium}}\gbrightbracket}}%
+        {\printdelim{titletypedelim}\printtext{\gbleftbracket}\nobreak#1\nobreak\printtext{{\SlashFont/}OL\gbrightbracket}}%
     }%
     {\ifentrytype{online}%
-        {\nobreak\printtext{[}\nobreak#1\nobreak\printtext{\texttt{/}OL]}}%
-        {\nobreak\printtext{[}\nobreak#1\nobreak\printtext{\iffieldundef{medium}{}{\texttt{/}\thefield{medium}}]}}%
+        {\printdelim{titletypedelim}\printtext{\gbleftbracket}\nobreak#1\nobreak\printtext{{\SlashFont/}OL\gbrightbracket}}%
+        {\printdelim{titletypedelim}\printtext{\gbleftbracket}\nobreak#1\nobreak\printtext{\iffieldundef{medium}{}{{\SlashFont/}\thefield{medium}}\gbrightbracket}}%
     }}%
-    {\nobreak\printtext{[}\nobreak#1\nobreak\printtext{]}}%
+    {\printdelim{titletypedelim}\printtext{\gbleftbracket}\nobreak#1\nobreak\printtext{\gbrightbracket}}%
 }
 
 %
@@ -2117,11 +2420,11 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
 \iftoggle{bbx:gbmedium}%
 {\iftoggle{bbx:url}%
     {\iffieldundef{url}%当存在url时，增加一个OL标识符
-        {\nobreak\printtext{[}\nobreak N\printtext{\iffieldundef{medium}{}{\texttt{/}\thefield{medium}}]}\nobreak}%
-        {\nobreak\printtext{[}\nobreak N\printtext{\texttt{/}OL]}\nobreak}%
+        {\printdelim{titletypedelim}\printtext{\gbleftbracket}\nobreak N\printtext{\iffieldundef{medium}{}{{\SlashFont/}\thefield{medium}}\gbrightbracket}\nobreak}%
+        {\printdelim{titletypedelim}\printtext{\gbleftbracket}\nobreak N\printtext{{\SlashFont/}OL\gbrightbracket}\nobreak}%
     }%
-    {\nobreak\printtext{[}\nobreak N\printtext{\iffieldundef{medium}{}{\texttt{/}\thefield{medium}}]}\nobreak}%
-}{\nobreak\printtext{[}\nobreak N\printtext{]}\nobreak}%
+    {\printdelim{titletypedelim}\printtext{\gbleftbracket}\nobreak N\printtext{\iffieldundef{medium}{}{{\SlashFont/}\thefield{medium}}\gbrightbracket}\nobreak}%
+}{\printdelim{titletypedelim}\printtext{\gbleftbracket}\nobreak N\printtext{\gbrightbracket}\nobreak}%
 }
 
 %
@@ -2131,11 +2434,11 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
 \iftoggle{bbx:gbmedium}%
 {\iftoggle{bbx:url}%
     {\iffieldundef{url}%当存在url时，增加一个OL标识符
-        {\nobreak\printtext{[}\nobreak S\printtext{\iffieldundef{medium}{}{\texttt{/}\thefield{medium}}]}\nobreak}%
-        {\nobreak\printtext{[}\nobreak S\printtext{\texttt{/}OL]}\nobreak}%
+        {\printdelim{titletypedelim}\printtext{\gbleftbracket}\nobreak S\printtext{\iffieldundef{medium}{}{{\SlashFont/}\thefield{medium}}\gbrightbracket}\nobreak}%
+        {\printdelim{titletypedelim}\printtext{\gbleftbracket}\nobreak S\printtext{{\SlashFont/}OL\gbrightbracket}\nobreak}%
     }%
-    {\nobreak\printtext{[}\nobreak S\printtext{\iffieldundef{medium}{}{\texttt{/}\thefield{medium}}]}\nobreak}%
-}{\nobreak\printtext{[}\nobreak S\printtext{]}\nobreak}%
+    {\printdelim{titletypedelim}\printtext{\gbleftbracket}\nobreak S\printtext{\iffieldundef{medium}{}{{\SlashFont/}\thefield{medium}}\gbrightbracket}\nobreak}%
+}{\printdelim{titletypedelim}\printtext{\gbleftbracket}\nobreak S\printtext{\gbrightbracket}\nobreak}%
 }
 
 %
@@ -2158,8 +2461,15 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
   [inbook,incollection,inproceedings]
   {title}{#1}%\nopunct\unspace
 \DeclareFieldFormat{url}{\url{#1}} %%url相关输出，url域修改如本行，源来自biblatex.def
-\def\UrlFont{\rmfamily}%设置url字体为roman字体%\ttfamily
-%\urlstyle{rm} %使用这句也一样
+%\def\UrlFont{\rmfamily}%设置url字体为roman字体%\ttfamily
+\urlstyle{same} %使用这句也一样
+\def\slashstyle#1{\expandafter\protect\csname slash@#1style\endcsname}
+\def\slash@ttstyle{\def\SlashFont{\ttfamily}}
+\def\slash@rmstyle{\def\SlashFont{\rmfamily}}
+\def\slash@sfstyle{\def\SlashFont{\sffamily}}
+\def\slash@samestyle{\def\SlashFont{}}
+%\def\SlashFont{}%设置斜杠的字体，比如：[J/OL]中的斜杠;\rmfamily
+\slashstyle{same}
 \setcounter{biburlnumpenalty}{100} %让url可以在数字后断行
 \setcounter{biburlucpenalty}{100} %让url可以在大写字母后断行
 \setcounter{biburllcpenalty}{100} %让url可以在小写字母后断行
@@ -2173,12 +2483,18 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
 %
 %   注意:修改标题的字母大小写，不能用前面的title的格式而要用titlecase
 %   因为titlecase is applied to the contents of the field directly，title is not
-%\DeclareFieldFormat{titlecase}{\MakeCapital#1}%重设标题格式，将其修改为首字母大写
+%   利用\mktitlecase、\mkbooktitlecase、\mkjournaltitlecase三个接口调整不同项大小写
+\newcommand\mktitlecase[1]{#1}%用于调整titlecase
+\newcommand\mkbooktitlecase[1]{#1}%用于调整booktitlecase
+\newcommand\mkjournaltitlecase[1]{#1}%用于调整journaltitlecase
 \DeclareFieldFormat{titlecase}{\iftoggle{bbx:titlelink}{%
-\iffieldundef{url}{\MakeCapital#1}{%
-\href{\thefield{url}}{#1}}}{\MakeCapital#1}}%重设标题格式，将其修改为首字母大写
+\iffieldundef{url}{\mktitlecase{#1}}{%
+\href{\thefield{url}}{\mktitlecase{#1}}}}{\mktitlecase{#1}}}%重设一般标题格式，将其修改为首字母大写
+\DeclareFieldFormat{booktitlecase}{\mkbooktitlecase{#1}}%重设booktitle标题格式
+\DeclareFieldFormat{journaltitlecase}{\mkjournaltitlecase{#1}}%重设journaltitle格式
 \DeclareFieldFormat{pages}{#1}%去掉前面引导页码的pp.等字符，\mkpageprefix[bookpagination]{#1}
 \DefineBibliographyExtras{english}{\renewcommand*{\bibrangedash}{-}}%将页码间隔符替换会英文的短横线
+\DefineBibliographyExtras{russian}{\renewcommand*{\bibrangedash}{-}}%将页码间隔符替换会英文的短横线
 
 \def\execgbfdfmtstd{%恢复到标准样式的设置
 \DeclareFieldFormat{title}{\mkbibemph{##1}}
@@ -2218,47 +2534,91 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
     \patchcmd{\abx@macro@title}{\newunitpunct}{}{}{}}}{}
   }
 
+%
+\renewbibmacro*{byeditor+others}{%
+  \ifnameundef{editor}
+    {}
+    {\iffieldequalstr{userd}{chinese}{}{\usebibmacro{byeditor+othersstrg}%
+     \setunit{\addspace}}%
+     \printnames[byeditor]{editor}%
+     \iffieldequalstr{userd}{chinese}{\usebibmacro{byeditor+othersstrg}}{}%
+     \clearname{editor}%
+     \newunit}%
+  \usebibmacro{byeditorx}%
+  \usebibmacro{bytranslator+others}}
 
 %
 %   修改译者位置格式
+%   v1.0w,20210401,hzz,增加对英文等其它语言译者的处理
 %
 %   原理方法:修改来自biblatex.def文件的bytranslator+others宏的格式
 \renewbibmacro*{bytranslator+others}{\bibauthorfont%
   \ifnameundef{translator}
     {}
-    {%\usebibmacro{bytranslator+othersstrg}
-     %\setunit{\addspace}%
-     \printnames[bytranslator]{translator}%
+    {\printnames[bytranslator]{translator}%
      \clearname{translator}%
      %从macro*{bytranslator+othersstrg}%中可以看到当地化字符串格式的引用前的代码处理
      %比如生成cotranslator等用于调用cotranslator所代表的当地化字符串
-     \usebibmacro{bytranslator+othersstrg}%“译”的位置换到下面来，即放到译者后面。
+     \iffieldequalstr{usere}{chinese}{\usebibmacro{bytranslator+othersstrg}}{}%“译”的位置换到下面来，即放到译者后面。
      %\setunit{\addspace}%
      \newunit}%
   \usebibmacro{withothers}}
+
+\renewbibmacro*{bytranslator+othersstrg}{%
+  \def\abx@tempa{bytranslator}%
+  \ifnamesequal{translator}{commentator}
+    {\appto\abx@tempa{co}%
+     \clearname{commentator}}
+    {\ifnamesequal{translator}{annotator}
+       {\appto\abx@tempa{an}%
+        \clearname{annotator}}
+       {}}%
+  \ifnamesequal{translator}{introduction}
+    {\appto\abx@tempa{in}%
+     \clearname{introduction}}
+    {\ifnamesequal{translator}{foreword}
+       {\appto\abx@tempa{fo}%
+        \clearname{foreword}}
+       {\ifnamesequal{translator}{afterword}
+          {\appto\abx@tempa{af}%
+           \clearname{afterword}}
+          {}}}%
+\iffieldequalstr{usere}{chinese}{\bibstring{bytranslatorcn}}
+  {\bibstring{\abx@tempa}}}
 
 
 %
 %   修改作者数量超过限定值，做省略时的处理格式
 %   v1.0,20160701,hzz
 %   v1.0O,20190103,hzz,修改利用新定义的一个分隔符strandothersdelim
-%
+%   v1.0w,20210401,hzz,针对其它语言的译者后的标点与中文不同做处理
+%   v1.1h,20220416,hzz,修正远古bug：在使用中文标点时会在译者中输出多个标点
 %   原理方法:判断作者或译者是否中文，若中文用字符等，否则用et al. 。
+%   \printnames由start-stop控制项数，默认是1和maxnames/minnames
+%说明：multinamedelim是各姓名之间的标点
+%      finalnamedelim是最后一个姓名前的取代multinamedelim的标点
+%      这两个标点是由printnames固定输出的。
+%      而且name:andothers在namefmtselected中是针对每个姓名都做的处理，所以其内容的输出要根据姓名列表的计数来做判断
+%     而finalandcomma 只是习惯用于最后一个and前输出的标点，但与前两个固定输出不同
+%      finalandcomma 只是在宏中判断并输出的，修改宏去掉它即可使其不输出
+\newcommand{\aftertransdelim}{\addcomma\addthinspace}
 \renewbibmacro*{name:andothers}{\bibauthorfont%
-  \ifboolexpr{
-    test {\ifnumequal{\value{listcount}}{\value{liststop}}}
-    and
-    test \ifmorenames
-  }{\ifnumgreater{\value{liststop}}{1}%
-       {\finalandcomma}%
-       {}%
-\printdelim{andothersdelim}\printdelim{strandothersdelim}%
-}{%当是译者的时候需要特殊处理：从7.2节看等，译前面加逗号，但从示例看等和译同时出现时，译前的逗号没有，比如：
-%袁训来, 陈哲, 肖书海, 等.
-%胡泳, 范海燕, 译.
-%潘惠霞, 魏婧, 杨艳, 等译.
-\ifcurrentname{translator}{\addcomma\addthinspace}{}%为了实现上述第二个示例情况做的处理
-}}
+\ifboolexpr{test {\ifnumequal{\value{listcount}}{\value{liststop}}}
+            and test \ifmorenames}
+    {\ifnumgreater{\value{liststop}}{1}%注意这里试图去区分姓名总数大于1的情况，当姓名总数大于1时，最后一个姓名后面先加入一个\finalandcomma
+        {}%\finalandcomma，目前国标没有这样的区分要求，如果有需要也是可以这么去做的。
+        {}%
+    \printdelim{andothersdelim}\printdelim{strandothersdelim}%
+    }%
+    {%当是译者的时候需要特殊处理：从7.2节看等，译前面加逗号，但从示例看等和译同时出现时，译前的逗号没有，比如：
+    %袁训来, 陈哲, 肖书海, 等.
+    %胡泳, 范海燕, 译.
+    %潘惠霞, 魏婧, 杨艳, 等译.
+    \ifnumequal{\value{listcount}}{\value{liststop}}%
+        {\ifcurrentname{translator}{\iffieldequalstr{usere}{chinese}{\aftertransdelim}{}}{}}{}%为了实现上述第二个示例情况做的处理
+    }%
+}
+
 
 
 %   修改省略作者后的本地化字符串，比如et al.
@@ -2327,14 +2687,14 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
     \iffieldequalstr{\userfieldabcde}{chinese}{\bibstring{andincitecn}}{}%
     \iffieldequalstr{\userfieldabcde}{korean}{\bibstring{andkr}}{}%
     \iffieldequalstr{\userfieldabcde}{japanese}{\bibstring{andjp}}{}%
-    \iffieldequalstr{\userfieldabcde}{english}{\space\bibstring{andincite}\space}{}%
-    \iffieldequalstr{\userfieldabcde}{french}{\space\bibstring{and}\space}{}%
-    \iffieldequalstr{\userfieldabcde}{russian}{\space\bibstring{and}\space}{}%
+    \iffieldequalstr{\userfieldabcde}{english}{\bibstring{andincite}}{}%
+    \iffieldequalstr{\userfieldabcde}{french}{\bibstring{and}}{}%
+    \iffieldequalstr{\userfieldabcde}{russian}{\bibstring{and}}{}%
 %\space%
   \or%
   \bibstring{andincitecn}%\space%
   \or%
-\space\bibstring{andincite}\space%
+\bibstring{andincite}%
   \fi}
 
 \DeclareDelimFormat[bib,biblist]{finalnamedelim}{%
@@ -2354,9 +2714,9 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
     \iffieldequalstr{\userfieldabcde}{russian}{\bibstring{and}}{}%
 \space%
   \or%
-  \bibstring{andcn}\space%
+  \bibstring{andcn}%
   \or%
-  \bibstring{and}\space%
+  \bibstring{and}%
   \fi}
 
 
@@ -2364,32 +2724,34 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
 %   重设title的输出
 %
 %   20180425，v1.0k，为标题增加字体控制命令，Hu Zhenzhen
+%   20220416，v1.1g，增加book类卷的输出
 %   原理方法:将文献类型标识符输出出去，原输出来自biblatex.def文件
 %   利用toggle做标识符是否输出的判断
 \renewbibmacro*{title}{%
-  \ifboolexpr{%
+\ifboolexpr{%
     test{\iffieldundef{title}}%
     and
-    test{\iffieldundef{subtitle}}%
-  }%
+    test{\iffieldundef{subtitle}}}%
     {}%
     {\printtext[title]{\bibtitlefont%增加字体控制命令
        \printfield[titlecase]{title}%
-       \ifboolexpr{test {\iffieldundef{subtitle}}}%这里增加了对子标题的判断，解决不判断多一个点的问题
-       {}{\setunit{\subtitlepunct}%
-       \printfield[titlecase]{subtitle}}%
-       \iffieldundef{titleaddon}{}%判断一下titleaddon，否则直接加可能多一个空格
-        {\setunit{\subtitlepunct}\printfield{titleaddon}}%
-        \iftoggle{bbx:gbtype}{%
-         \iffieldundef{note}{\printfield[gbtypeflag]{usera}}%在标题后直接给出文献标识字母，判断一下，是否是报纸和标准
-        {\iffieldequalstr{note}{standard}{\printfield[gbtypeflags]{usera}}%判断是否为标准
-                                         {\iffieldequalstr{note}{news}{\printfield[gbtypeflagn]{usera}}%判断是否为报纸
-                                                                      {\printfield[gbtypeflag]{usera}}}%其它
-        }}{}%
-     %\iffieldundef{booktitle}{\newunit}{}%当title是析出时，不要标点
-     %\newunit
-}%
-}}
+       \ifboolexpr{test {\iffieldundef{subtitle}}}%增加了对子标题的判断
+            {}{\setunit{\subtitlepunct}\printfield[titlecase]{subtitle}}%
+       \iffieldundef{titleaddon}{}{\setunit{\subtitlepunct}\printfield{titleaddon}}%判断一下titleaddon
+       \ifboolexpr{test{\ifentrytype{book}} and (not test{\iffieldundef{volume}})}%判断一下book类有没有volume
+            {\setunit{\subtitlepunct}\printfield{volume}}{}%
+       \ifboolexpr{(test{\ifentrytype{archive}} or  test{\ifentrytype{online}}) and (not test{\iffieldundef{number}})}%判断一下archive类有没有number
+            {\setunit{\subtitlepunct}\printfield{number}}{}%
+       \ifboolexpr{test{\ifentrytype{report}} and (not test{\iffieldundef{number}})}%判断一下report类有没有number
+            {\setunit{\subtitlepunct}\printfield{type}\setunit*{\addspace}\printfield{number}}{}%
+       \iftoggle{bbx:gbtype}%
+            {\iffieldundef{entrysubtype}{\printfield[gbtypeflag]{usera}}%在标题后直接给出文献标识字母，判断一下，是否是报纸和标准
+            {\iffieldequalstr{entrysubtype}{standard}{\printfield[gbtypeflags]{usera}}%判断是否为标准
+                  {\iffieldequalstr{entrysubtype}{news}{\printfield[gbtypeflagn]{usera}}%判断是否为报纸
+                  {\printfield[gbtypeflag]{usera}}}}}{}%%其它
+       }%
+    }%
+}
 
 %
 %   作者信息的输出格式
@@ -2399,6 +2761,7 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
 \DeclareNameFormat{namefmtselected}{%
 \iffieldundef{namefmtid}{}%
 {\defcounter{gbnamefmtcase}{\thefield{namefmtid}}}%
+%\printtext{\thegbnamefmtcase}%
 \ifcase\value{gbnamefmtcase}%
   \ifgiveninits
     {\usebibmacro{name:gbuppercase}
@@ -2423,7 +2786,8 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
       {\namepartgiven}
       {\namepartprefix}
       {\namepartsuffix}}%
-\or
+\or%
+\renewrobustcmd*{\bibinithyphendelim}{.\mbox{-}}%
   \ifgiveninits
     {\usebibmacro{name:given-family}
       {\namepartfamily}
@@ -2435,7 +2799,8 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
       {\namepartgiven}
       {\namepartprefix}
       {\namepartsuffix}}%
-\or
+\or%
+\renewrobustcmd*{\bibinithyphendelim}{.\mbox{-}}%
     \ifgiveninits
        {\usebibmacro{name:family-given}
          {\namepartfamily}
@@ -2453,7 +2818,8 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
       {\namepartgiven}
       {\namepartprefix}
       {\namepartsuffix}%
-\or
+\or%
+\renewrobustcmd*{\bibinithyphendelim}{.\mbox{-}}%
   \ifnumequal{\value{listcount}}{1}
     {\ifgiveninits
        {\usebibmacro{name:family-given}
@@ -2483,20 +2849,37 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
          {\namepartgiven}
          {\namepartprefix}
          {\namepartsuffix}}}%
+\or
+\usebibmacro{name:gbquanpin}
+      {\namepartfamily}
+      {\namepartgiven}
+      {\namepartprefix}
+      {\namepartsuffix}%
+\or
+\usebibmacro{name:gbfullname}
+      {\namepartfamily}
+      {\namepartgiven}
+      {\namepartprefix}
+      {\namepartsuffix}%
 \fi
-  \usebibmacro{name:andothers}}
+\iftoggle{bbx:gbnoothers}{}%
+  {\usebibmacro{name:andothers}}%
+}
 
 \DeclareNameAlias{default}{namefmtselected}%姓名的默认格式采用可选的模式
 \DeclareNameAlias{sortname}{default}% Used in the bibliography %family-given/given-family
 \DeclareNameAlias{citename}{default}% Default used by \citename
+\DeclareNameAlias{bytranslator}{default}
 
 \DeclareDelimFormat[bib,biblist]{andothersdelim}{\addcomma\addspace}
 %\DeclareDelimFormat[textcite]{andothersdelim}{\addspace}%
 
 %GB/T 7714-2015 风格，全部大写
+\def\gbcaselocalset{\renewrobustcmd*{\bibinitperiod}{}%将名字简写后的点去掉
+\renewcommand*{\revsdnamepunct}{}%%%来源biblatex.def
+}
 \newbibmacro*{name:gbuppercase}[4]{\bibauthorfont%
-\renewrobustcmd*{\bibinitperiod}{}%将名字简写后的点去掉
-\renewcommand*{\revsdnamepunct}{}%
+  \gbcaselocalset%
   \ifuseprefix%
     {\usebibmacro{name:delim}{#3#1}%
      \usebibmacro{name:hook}{#3#1}%
@@ -2523,8 +2906,7 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
 
 %GB/T 7714-2015 风格，大小写不变，根据bib文件内输入原样输出
 \newbibmacro*{name:gblowercase}[4]{\bibauthorfont%
-    \renewrobustcmd*{\bibinitperiod}{}%将名字简写后的点去掉
-    \renewcommand*{\revsdnamepunct}{}%%来源biblatex.def
+  \gbcaselocalset%
   \ifuseprefix
     {\usebibmacro{name:delim}{#3#1}%
      \usebibmacro{name:hook}{#3#1}%
@@ -2550,10 +2932,11 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
 }
 
 %中文常见风格，汉语拼音全拼模式
-\newbibmacro*{name:gbpinyin}[4]{\bibauthorfont%
-\renewrobustcmd*{\bibinitperiod}{}%将名字简写后的点去掉，%来源biblatex2.STY
+\def\gbpinyinlocalset{\renewrobustcmd*{\bibinitperiod}{}%将名字简写后的点去掉，%来源biblatex2.STY
 \renewcommand*{\revsdnamepunct}{}%%来源biblatex.def
-\renewrobustcmd*{\bibnamedelima}{\mbox{-}}%
+\renewrobustcmd*{\bibnamedelima}{\mbox{-}}}
+\newbibmacro*{name:gbpinyin}[4]{\bibauthorfont%
+\gbpinyinlocalset%
   \ifuseprefix
     {\usebibmacro{name:delim}{#3#1}%
      \usebibmacro{name:hook}{#3#1}%
@@ -2563,7 +2946,7 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
          {\mkbibnameprefix{#3}\isdot}%
        \ifprefchar{}{\bibnamedelimc}}%
      \ifdefvoid{#2}{\mkbibnamefamily{\MakeCapital{#1}}}{\mkbibnamefamily{\MakeUppercase{#1}}}\isdot%
-     \ifdefvoid{#2}{}{\revsdnamepunct\bibnamedelimd\MakeSentenceCase{\mkbibnamegiven{#2}}\isdot}%\MakeCapital
+     \ifdefvoid{#2}{}{\revsdnamepunct\bibnamedelimd\mkbibnamegiven{\MakeSentenceCase{#2}}\isdot}%\MakeCapital
      \ifdefvoid{#4}{}{\bibnamedelimd\mkbibnamesuffix{#4}\isdot}}
     {\usebibmacro{name:delim}{#1}%
      \usebibmacro{name:hook}{#1}%
@@ -2578,14 +2961,67 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
      \ifdefvoid{#3}{}{\bibnamedelimd\mkbibnameprefix{#3}\isdot}
      \ifdefvoid{#4}{}{\bibnamedelimd\mkbibnamesuffix{#4}\isdot}}%
 }
+%中文常见风格，汉语拼音全拼模式
+\def\gbquanpinlocalset{\renewrobustcmd*{\bibinitperiod}{}%将名字简写后的点去掉，%来源biblatex2.STY
+\renewcommand*{\revsdnamepunct}{}%%来源biblatex.def
+\renewrobustcmd*{\bibnamedelima}{}}
+\newbibmacro*{name:gbquanpin}[4]{\bibauthorfont%
+\gbquanpinlocalset%
+  \ifuseprefix
+    {\usebibmacro{name:delim}{#3#1}%
+     \usebibmacro{name:hook}{#3#1}%
+     \ifdefvoid{#3}{}{%
+       \ifcapital
+         {\mkbibnameprefix{\MakeCapital{#3}}\isdot}
+         {\mkbibnameprefix{#3}\isdot}%
+       \ifprefchar{}{\bibnamedelimc}}%
+     \ifdefvoid{#2}{\mkbibnamefamily{\MakeCapital{#1}}}{\mkbibnamefamily{\MakeCapital{#1}}}\isdot%
+     \ifdefvoid{#2}{}{\revsdnamepunct\bibnamedelimd\mkbibnamegiven{\MakeSentenceCase{#2}}\isdot}%\MakeCapital
+     \ifdefvoid{#4}{}{\bibnamedelimd\mkbibnamesuffix{#4}\isdot}}
+    {\usebibmacro{name:delim}{#1}%
+     \usebibmacro{name:hook}{#1}%
+     \ifdefvoid{#2}{\mkbibnamefamily{\MakeCapital{#1}}}{\mkbibnamefamily{\MakeCapital{#1}}}\isdot%
+     \ifboolexpe{%
+       test {\ifdefvoid{#2}}
+       and
+       test {\ifdefvoid{#3}}}
+       {}
+       {\revsdnamepunct}%
+     \ifdefvoid{#2}{}{\bibnamedelimd\mkbibnamegiven{\MakeCapital{#2}}\isdot}%\MakeCapital
+     \ifdefvoid{#3}{}{\bibnamedelimd\mkbibnameprefix{#3}\isdot}
+     \ifdefvoid{#4}{}{\bibnamedelimd\mkbibnamesuffix{#4}\isdot}}%
+}
+
+%英文风格，全名模式
+\def\gbfullnamelocalset{\renewrobustcmd*{\bibinitperiod}{}%将名字简写后的点去掉，%来源biblatex2.STY
+\renewcommand*{\revsdnamepunct}{}%%来源biblatex.def
+\renewrobustcmd*{\bibnamedelima}{}}
+\newbibmacro*{name:gbfullname}[4]{\bibauthorfont%
+\gbfullnamelocalset%
+  \ifuseprefix
+    {\usebibmacro{name:delim}{#3#1}%
+     \usebibmacro{name:hook}{#3#1}%
+     \ifdefvoid{#2}{}{\mkbibnamegiven{\MakeSentenceCase{#2}}\isdot\bibnamedelimd}%\MakeCapital
+     \ifdefvoid{#3}{}{%
+       \ifcapital
+         {\mkbibnameprefix{\MakeCapital{#3}}\isdot}
+         {\mkbibnameprefix{#3}\isdot}%
+       \ifprefchar{}{\bibnamedelimc}}%
+     \mkbibnamefamily{\MakeCapital{#1}}\isdot%
+     \ifdefvoid{#4}{}{\bibnamedelimd\mkbibnamesuffix{#4}\isdot}}
+    {\usebibmacro{name:delim}{#1}%
+     \usebibmacro{name:hook}{#1}%
+     \ifdefvoid{#2}{}{\mkbibnamegiven{\MakeCapital{#2}}\isdot\bibnamedelimd}%\MakeCapital
+     \ifdefvoid{#2}{\mkbibnamefamily{\MakeCapital{#1}}}{\mkbibnamefamily{\MakeUppercase{#1}}}\isdot%
+     \ifdefvoid{#4}{}{\bibnamedelimd\mkbibnamesuffix{#4}\isdot}}%
+}
 
 
 \@ifpackagelater{biblatex}{2016/03/27}%biblatex<3.2版的情况
   {}{
     %GB/T 7714-2015 风格，全部大写
     \renewbibmacro*{name:gbuppercase}[4]{\bibauthorfont%
-    \renewrobustcmd*{\bibinitperiod}{}%将名字简写后的点去掉
-    \renewcommand*{\revsdnamepunct}{}%%来源biblatex.def
+    \gbcaselocalset%
       \ifuseprefix
         {\usebibmacro{name:delim}{#3#1}%
          \usebibmacro{name:hook}{#3#1}%
@@ -2618,8 +3054,7 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
 
     %GB/T 7714-2015 风格，大小写不变，根据bib文件内输入原样输出
     \renewbibmacro*{name:gblowercase}[4]{\bibauthorfont%
-    \renewrobustcmd*{\bibinitperiod}{}%将名字简写后的点去掉
-    \renewcommand*{\revsdnamepunct}{}%%来源biblatex.def
+      \gbcaselocalset%
       \ifuseprefix
         {\usebibmacro{name:delim}{#3#1}%
          \usebibmacro{name:hook}{#3#1}%
@@ -2644,9 +3079,7 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
 
     %中文常见风格，汉语拼音全拼模式
     \renewbibmacro*{name:gbpinyin}[4]{\bibauthorfont%
-    \renewrobustcmd*{\bibinitperiod}{}%将名字简写后的点去掉
-    \renewcommand*{\revsdnamepunct}{}%%来源biblatex.def
-    \renewrobustcmd*{\bibnamedelima}{\mbox{-}}%
+    \gbpinyinlocalset%
       \ifuseprefix
         {\usebibmacro{name:delim}{#3#1}%
          \usebibmacro{name:hook}{#3#1}%
@@ -2656,11 +3089,35 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
              {\mkbibnameprefix{#3}\isdot}%
            \ifpunctmark{'}{}{\bibnamedelimc}}%
          \ifblank{#2}{\MakeCapital#1}{\mkbibnamelast{\MakeUppercase{#1}}}\isdot%\MakeUppercase %\mkbibnamelast{\MakeUppercase{#1}} %\MakeSentenceCase
-         \ifblank{#2}{}{\revsdnamepunct\bibnamedelimd\MakeSentenceCase{\mkbibnamefirst{#2}}\isdot}%
+         \ifblank{#2}{}{\revsdnamepunct\bibnamedelimd\mkbibnamefirst{\MakeSentenceCase{#2}}\isdot}%
          \ifblank{#4}{}{\addcomma\addspace\bibnamedelimd\mkbibnameaffix{#4}\isdot}}
         {\usebibmacro{name:delim}{#1}%
          \usebibmacro{name:hook}{#1}%
          \ifblank{#2}{\MakeCapital#1}{\mkbibnamelast{\MakeUppercase{#1}}}\isdot  %大写，参考4.6.4 Miscellaneous Commands，\MakeUppercase %\MakeSentenceCase
+         \ifblank{#2#3}{}{\revsdnamepunct}%
+         \ifblank{#2}{}{\bibnamedelimd\mkbibnamefirst{\MakeUppercase{#2}}\isdot}%
+         \ifblank{#3}{}{\bibnamedelimd\mkbibnameprefix{#3}\isdot}%
+         \addcomma\addspace%
+         \ifblank{#4}{}{\addcomma\addspace\bibnamedelimd\mkbibnameaffix{#4}\isdot}%
+         }%
+     }
+      %中文常见风格，汉语拼音全拼模式
+    \renewbibmacro*{name:gbquanpin}[4]{\bibauthorfont%
+    \gbquanpinlocalset%
+      \ifuseprefix
+        {\usebibmacro{name:delim}{#3#1}%
+         \usebibmacro{name:hook}{#3#1}%
+         \ifblank{#3}{}{%
+           \ifcapital
+             {\mkbibnameprefix{\MakeCapital{#3}}\isdot}
+             {\mkbibnameprefix{#3}\isdot}%
+           \ifpunctmark{'}{}{\bibnamedelimc}}%
+         \ifblank{#2}{\MakeCapital#1}{\mkbibnamelast{\MakeCapital{#1}}}\isdot%\MakeUppercase %\mkbibnamelast{\MakeUppercase{#1}} %\MakeSentenceCase
+         \ifblank{#2}{}{\revsdnamepunct\bibnamedelimd\mkbibnamefirst{\MakeSentenceCase{#2}}\isdot}%
+         \ifblank{#4}{}{\addcomma\addspace\bibnamedelimd\mkbibnameaffix{#4}\isdot}}
+        {\usebibmacro{name:delim}{#1}%
+         \usebibmacro{name:hook}{#1}%
+         \ifblank{#2}{\MakeCapital#1}{\mkbibnamelast{\MakeCapital{#1}}}\isdot  %大写，参考4.6.4 Miscellaneous Commands，\MakeUppercase %\MakeSentenceCase
          \ifblank{#2#3}{}{\revsdnamepunct}%
          \ifblank{#2}{}{\bibnamedelimd\mkbibnamefirst{\MakeUppercase{#2}}\isdot}%
          \ifblank{#3}{}{\bibnamedelimd\mkbibnameprefix{#3}\isdot}%
@@ -2705,8 +3162,12 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
     {\iffirstinits
        {\usebibmacro{name:first-last}{#1}{#4}{#5}{#7}}
        {\usebibmacro{name:first-last}{#1}{#3}{#5}{#7}}}%
-  \fi
-  \usebibmacro{name:andothers}}
+    \or
+    \usebibmacro{name:gbquanpin}{#1}{#3}{#5}{#7}%
+  \fi%
+\iftoggle{bbx:gbnoothers}{}%
+  {\usebibmacro{name:andothers}}%
+  }%
 }
 
 %
@@ -2729,9 +3190,9 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
 %
 \defversion{3.4}{date}{
     \renewbibmacro*{urldate}{%
-    \addthinspace\printtext{[}\printfield{urlyear}%
+    \addthinspace\printtext{\gbleftbracket}\printfield{urlyear}%
     \iffieldundef{urlmonth}{}{\bibrangedash\printfield{urlmonth}}%
-    \iffieldundef{urlday}{}{\bibrangedash\printfield{urlday}}\printtext{]}}
+    \iffieldundef{urlday}{}{\bibrangedash\printfield{urlday}}\printtext{\gbrightbracket}}
 
     \newbibmacro*{newsdate}{%%新增加一个公告日期，公开日期或新闻日期
     \iffieldundef{year}{}{\printfield{year}%
@@ -2740,30 +3201,27 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
     }
 
     \newbibmacro*{modifydate}{%新增加一个带括号的日期，用于表示电子资源的更新和修改日期，而公告日期则按日期格式
-        \ifboolexpr{%
-        test{\iffieldundef{day}} and test{\iffieldundef{endday}} and test{\iffieldundef{eventday}}%
-        }%
-        {}%更新或修改日期通常有day信息
-        {\iffieldequalstr{year}{}{%替换\iffieldundef{year}，因为year总是存在，但为空
-            \iffieldundef{endyear}{%
-                \iffieldundef{eventyear}{}{\printtext{\mkbibparens{\printtext{\printfield{eventyear}}%
-                \iffieldundef{eventmonth}{}{\bibrangedash\thefield{eventmonth}}%
-                \iffieldundef{eventday}{}{\bibrangedash\printfield{eventday}}}}%
-                }%
-            }{%
-                \iffieldundef{endyear}{}{\printtext{\mkbibparens{\printtext{\printfield{endyear}}%
-                \iffieldundef{endmonth}{}{\bibrangedash\thefield{endmonth}}%
-                \iffieldundef{endday}{}{\bibrangedash\printfield{endday}}}}%
-                }%
+        %更新或修改日期通常有day信息
+        \iffieldundef{eventday}
+        {%
+            \iffieldundef{endday}
+            {%
+                \iffieldundef{day}{}{\printtext{\mkbibparens{\printtext{\printfield{year}}%
+                    \bibrangedash\thefield{month}%
+                    \bibrangedash\printfield{day}}}}%
+            }%
+            {%
+                 \iffieldundef{endyear}{}{\printtext{\mkbibparens{\printtext{\printfield{endyear}}%
+                    \iffieldundef{endmonth}{}{\bibrangedash\thefield{endmonth}}%
+                    \iffieldundef{endday}{}{\bibrangedash\printfield{endday}}}}}%
             }%
         }%
         {%
-            \iffieldundef{year}{}{\printtext{\mkbibparens{\printtext{\printfield{year}}%
-            \iffieldundef{month}{}{\bibrangedash\thefield{month}}%
-            \iffieldundef{day}{}{\bibrangedash\printfield{day}}}}%
-            }%
+            \iffieldundef{eventyear}{}{\printtext{\mkbibparens{\printtext{\printfield{eventyear}}%
+                \iffieldundef{eventmonth}{}{\bibrangedash\thefield{eventmonth}}%
+                \iffieldundef{eventday}{}{\bibrangedash\printfield{eventday}}}}}%
         }%
-    }}%
+    }%
 }
 
 %
@@ -2772,7 +3230,7 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
 \defversion{3.7}{date}{
     \DeclareFieldFormat{urldate}{##1}
     \renewbibmacro*{urldate}{%
-    \addthinspace\printtext{[}\printurldate\printtext{]}}%能用高层命令+选项尽量用命令(比如这里的\printurldate)，而不用\blx@edtfdate这种更底层的命令
+    \addthinspace\printtext{\gbleftbracket}\printurldate\printtext{\gbrightbracket}}%能用高层命令+选项尽量用命令(比如这里的\printurldate)，而不用\blx@edtfdate这种更底层的命令
 
     %
     %   专利的公告日期、或报纸的日期的输出宏
@@ -2786,17 +3244,17 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
     }
 
     \newbibmacro*{modifydate}{%新增加一个带括号的日期，用于表示电子资源的更新和修改日期，而公告日期则按日期格式
-        \ifboolexpr{%
-        test{\iffieldundef{day}} and test{\iffieldundef{endday}} and test{\iffieldundef{eventday}}%
-        }%
-        {}%更新或修改日期通常有day信息
-        {\iffieldundef{year}{%
-                \iffieldundef{endyear}{\iffieldundef{eventyear}{}{\printtext{(}\printeventdate\printtext{)}}}%
-                {\printtext{(}\printenddate\printtext{)}}%
-        }{\iffieldequalstr{year}{}{%因为year存在，但为空
-            }{\printtext{(}\blx@edtfdate{}{}\printtext{)}}%
-         }%
-    }}%
+        %更新或修改日期通常有day信息
+        \iffieldundef{eventday}%
+           {%
+             \iffieldundef{endday}{%
+                 \iffieldundef{day}{}{\iffieldequalstr{day}{}{}%因为day存在，但为空
+                    {\printtext{\gbleftparen}\blx@edtfdate{}{}\printtext{\gbrightparen}}}%
+                 }%
+                {\printtext{\gbleftparen}\printenddate\printtext{\gbrightparen}}%
+           }%
+           {\printtext{\gbleftparen}\printeventdate\printtext{\gbrightparen}}%
+    }%
 }
 
 %
@@ -2805,7 +3263,7 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
 \defversion{3.10}{date}{
     \DeclareFieldFormat{urldate}{##1}
     \renewbibmacro*{urldate}{%
-    \addthinspace\printtext{[}\printurldate\printtext{]}}%能用高层命令+选项尽量用命令(比如这里的\printurldate)，而不用\blx@edtfdate这种更底层的命令
+    \addthinspace\printtext{\gbleftbracket}\printurldate\printtext{\gbrightbracket}}%能用高层命令+选项尽量用命令(比如这里的\printurldate)，而不用\blx@edtfdate这种更底层的命令
 
     %
     %   专利的公告日期、或报纸的日期的输出宏
@@ -2822,17 +3280,17 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
 
     %
     \newbibmacro*{modifydate}{%新增加一个带括号的日期，用于表示电子资源的更新和修改日期，而公告日期则按日期格式
-        \ifboolexpr{%
-        test{\iffieldundef{day}} and test{\iffieldundef{endday}} and test{\iffieldundef{eventday}}%
-        }%
-        {}%更新或修改日期通常有day信息
-        {\iffieldundef{year}{%
-                \iffieldundef{endyear}{\iffieldundef{eventyear}{}{\printtext{(}\printeventdate\printtext{)}}}%
-                {\printtext{(}\printenddate\printtext{)}}%
-        }{\iffieldequalstr{year}{}{%因为year存在，但为空
-            }{\printtext{(}\blx@gbdate{}{}\printtext{)}}%
-         }%
-    }}%
+        %更新或修改日期通常有day信息
+        \iffieldundef{eventday}%
+           {%
+             \iffieldundef{endday}{%
+                 \iffieldundef{day}{}{\iffieldequalstr{day}{}{}%因为day存在，但为空
+                    {\printtext{\gbleftparen}\blx@gbdate{}{}\printtext{\gbrightparen}}}%
+                 }%
+                {\printtext{\gbleftparen}\printenddate\printtext{\gbrightparen}}%
+           }%
+           {\printtext{\gbleftparen}\printeventdate\printtext{\gbrightparen}}%
+    }%
 }
 
 %
@@ -2842,18 +3300,22 @@ test {\iftoggle{iftlseven}}%biblatex<=3.7
     %为了实现v3.8以上版本的双语文献，采用related的方法代替set方法，因为set方法已经无法实现了，
     %因为set不再复制其第一个成员的信息。于是定义一个命令，用于动态的修改数据，即添加related域的信息
     %其中使用了\DeclareStyleSourcemap，但由于其只能出现在导言区中，因此\defdoublelangentry命令也只能出现在导言区中
+    %20240911-修改
+    %修正match多次匹配related文献的问题，当要文献A关联文献B时，若B的entrykey中包含A的entrykey的信息
+    %之前因为不是全词匹配，则B也会被加上related域，因此采用全词匹配的方式避免该问题
     \newcommand{\defdoublelangentry}[2]{%
     \edef\entrykeya{##1}
     \edef\entrykeyb{##2}
         \DeclareStyleSourcemap{
           \maps[datatype=bibtex]{
             \map{
-              \step[fieldsource=entrykey, match=\entrykeya, final]
+              \step[fieldsource=entrykey, match=\regexp{^}\entrykeya\regexp{$}, final]
               \step[fieldset=related, fieldvalue=\entrykeyb]
             }
           }
        }
     }
+    \let\defdblanentry=\defdoublelangentry
 }
 
 %
@@ -2988,6 +3450,10 @@ test{\iftoggle{iftlnine}}
 \DeclareListAlias{institution}{location}
 \DeclareListAlias{publisher}{location}
 
+%定义出版社与年份之间的标点便于后面重定义
+\newcommand{\pubdatadelim}{\setunit*{\addcomma\space}}
+\newcommand{\locnopubdelim}{\setunit*{\addcomma\space}}
+
 %   新增一个样式用于输出连续出版物的地址，单位，时间，
 %   用于periodical连续出版物的出版社和地址的处理
 %
@@ -2998,16 +3464,17 @@ test{\iftoggle{iftlnine}}
 {\testCJKfirst{userd}%
 \ifboolexpr{%
 test {\iflistundef{location}} and test {\iflistundef{institution}}%
-}{\iftoggle{ifCJKforgbt}{\printtext{[\str@noaddress}\space :\space\str@nopublisher]}%
-{\printtext{[S.l.\space :\space s.n.\adddot]}}%
+}{\iftoggle{ifCJKforgbt}{\printtext{\gbleftbracket\str@noaddress}\space :\space\str@nopublisher\gbrightbracket}%
+{\printtext{\gbleftbracket S.l.\space :\space s.n.\adddot\gbrightbracket}}%
 }{%
-\iflistundef{location}{\iftoggle{ifCJKforgbt}{\printtext{[\str@noaddress]}}{\printtext{[S.l.\adddot]}}}%
+\iflistundef{location}{\iftoggle{ifCJKforgbt}{\printtext{\gbleftbracket\str@noaddress\gbrightbracket}}%
+    {\printtext{\gbleftbracket S.l.\adddot\gbrightbracket}}}%
   {\printlist{location}}%
-\addcolon\addspace%
+\publocpunct%
 \iflistundef{institution}{%
-\iftoggle{ifCJKforgbt}{\printtext{[\str@nopublisher]}}{\printtext{\mkbibbrackets{s.n.}}}}%
+\iftoggle{ifCJKforgbt}{\printtext{\gbleftbracket\str@nopublisher\gbrightbracket}}{\printtext{\mkbibbrackets{s.n.}}}}%
 {\printlist{institution}}}%
-\setunit{\addcomma\addspace}%
+  \pubdatadelim%
   %\usebibmacro{date}%
   \printfield{year}%
   \bibrangedash%
@@ -3015,10 +3482,10 @@ test {\iflistundef{location}} and test {\iflistundef{institution}}%
   \newunit}%
 {\printlist{location}%
   \iflistundef{institution}%
-    {\setunit*{\addcomma\space}}
-    {\setunit*{\addcolon\space}}%
+    {\locnopubdelim}
+    {\setunit*{\publocpunct}}%
   \printlist{institution}%
-  \setunit*{\addcomma\space}%
+  \pubdatadelim%
   \usebibmacro{date}%
   \newunit}%
 }
@@ -3032,25 +3499,28 @@ test {\iflistundef{location}} and test {\iflistundef{institution}}%
 \iftoggle{bbx:gbpub}%
 {\testCJKfirst{userd}%
     \ifboolexpr{ test {\iflistundef{location}} and test {\iflistundef{publisher}} }%
-    {\iffieldequalstr{note}{standard}{}{\iftoggle{ifCJKforgbt}{\printtext{[\str@noaddress}\space :\space\str@nopublisher]}{\printtext{[S.l.\space :\space s.n.\adddot]}}}}%
+    {\iffieldequalstr{entrysubtype}{standard}{}
+        {\iftoggle{ifCJKforgbt}{\printtext{\gbleftbracket\str@noaddress}\space :\space\str@nopublisher\gbrightbracket}
+            {\printtext{\gbleftbracket S.l.\space :\space s.n.\adddot\gbrightbracket}}}}%
     {\iflistundef{location}{%\adddot
-        \iffieldequalstr{note}{standard}{}%%从gbt7714-2015标准第19页看到，标准存在出版项时输出，没有时完全省略。
-        {\iftoggle{ifCJKforgbt}{\printtext{[\str@noaddress]}\addcolon\addspace}{\printtext{[S.l.\adddot]}\addcolon\addspace}}}%  \bibstring{noaddress}
-        {\printlist{location}\addcolon\addspace}%%\addcolon\addspace%
+        \iffieldequalstr{entrysubtype}{standard}{}%%从gbt7714-2015标准第19页看到，标准存在出版项时输出，没有时完全省略。
+        {\iftoggle{ifCJKforgbt}{\printtext{\gbleftbracket\str@noaddress\gbrightbracket}\addcolon\addspace}%
+            {\printtext{\gbleftbracket S.l.\adddot\gbrightbracket}\publocpunct}}}%  \bibstring{noaddress}
+        {\printlist{location}\publocpunct}%%\addcolon\addspace%
     \iflistundef{publisher}{%
-        \iffieldequalstr{note}{standard}{}%
-        {\iftoggle{ifCJKforgbt}{\printtext{[\str@nopublisher]}\setunit{\adddot\addspace}\setunit*{\addcomma\addspace}}%
+        \iffieldequalstr{entrysubtype}{standard}{}%
+        {\iftoggle{ifCJKforgbt}{\printtext{\gbleftbracket\str@nopublisher\gbrightbracket}\setunit{\adddot\addspace}\setunit*{\addcomma\addspace}}%
         {\printtext{\mkbibbrackets{s.n.}}\setunit{\adddot\addspace}\setunit*{\addcomma\addspace}}}}%
         {\printlist{publisher}}}%
-\setunit*{\addcomma\addspace}%\addcomma\addspace%
+\pubdatadelim%\addcomma\addspace%
 \usebibmacro{date}%%\newunit %去掉这个标点
 }%
 {\printlist{location}%
   \iflistundef{publisher}
-    {\setunit*{\addcomma\space}}
-    {\setunit*{\addcolon\space}}%
+    {\locnopubdelim}
+    {\setunit*{\publocpunct}}%
   \printlist{publisher}%
-  \setunit*{\addcomma\space}%
+  \pubdatadelim%
   \usebibmacro{date}%%\newunit
   }%
 }
@@ -3064,9 +3534,9 @@ test {\iflistundef{location}} and test {\iflistundef{institution}}%
 {\printlist{location}%%加了一个编组避免\usebibmacro{date}把month和day信息去掉
   \iflistundef{institution}
     {\setunit*{\addcomma\space}}
-    {\setunit*{\addcolon\space}}%
+    {\setunit*{\publocpunct}}%
   \printlist{institution}%
-  \setunit*{\addcomma\space}%
+  \pubdatadelim%
   \usebibmacro{date}%
   %\newunit
   }}
@@ -3081,6 +3551,12 @@ test {\iflistundef{location}} and test {\iflistundef{institution}}%
 {\bibstring{serialcn}#1\bibstring{volumecn}}%
 {\bibstring{volume}~#1}%
 }% volume of a book
+\DeclareFieldFormat[book,inbook,incollection]{volume}%
+{\iffieldequalstr{userd}{chinese}{\iffieldint{volume}%
+        {\bibstring{serialcn}#1\bibstring{volumecn}%
+        }{#1}}%
+    {\bibstring{volume}~#1}%
+}
 \DeclareFieldFormat[article,periodical]{volume}{#1}% volume of a journal
 
 %
@@ -3098,16 +3574,19 @@ incollection,proceedings,inproceedings]{number}{%
 
 %
 %   对edition版本信息格式做出修改
-%
+%   注意实现逻辑：
+%   1. 不是整数时原样输出
+%   2. 当是整数且大于1时按版本格式输出
 \DeclareFieldFormat{edition}{\bibtitlefont%源来自biblatex.DEF
-\testCJKfirst{userd}%
-\iftoggle{ifCJKforgbt}%
-{\ifinteger{#1}%
-{\printtext{#1\str@edition}}%
-{#1\isdot}}%
-{\ifinteger{#1}%
-{\mkbibordedition{#1}~\bibstring{edition}}%
-{#1\isdot}}}
+    \testCJKfirst{userd}%
+    \iftoggle{ifCJKforgbt}%
+        {\ifinteger{#1}%
+            {\ifnumgreater{#1}{1}{\printtext{#1\str@edition}}{}}%
+            {#1\isdot}}%
+        {\ifinteger{#1}%
+            {\ifnumgreater{#1}{1}{\mkbibordedition{#1}~\bibstring{edition}}{}}%
+            {#1\isdot}}%
+}
 
 %
 %   对version的版本信息做出修改
@@ -3130,22 +3609,22 @@ incollection,proceedings,inproceedings]{number}{%
   }
     {}
     {\printtext[booktitle]{\bibtitlefont%
-       \printfield[titlecase]{booktitle}%
+       \printfield[booktitlecase]{booktitle}%
        \setunit{\subtitlepunct}%
-       \printfield[titlecase]{booksubtitle}}%
-     \newunit%标点换成下一句
-     \setunit{\subtitlepunct}}%
-  \printfield{booktitleaddon}}
+       \printfield[booktitlecase]{booksubtitle}}%
+     \setunit{\subtitlepunct}%
+  \printfield{booktitleaddon}}}
 
 
 %
 %   调整期刊名的格式
 %
 %   v1.0k,20180425,增加了字体控制命令，hzz
+%   v1.1j,20220527,修复期刊名不存在时多余的标点
 \renewbibmacro*{journal+issuetitle}{\bibpubfont%源来自standard.bbx
   \usebibmacro{journal}%
   %\setunit*{\addspace}%
-  \setunit*{\addcomma\addspace}%修改为增加一个逗号
+  \iffieldundef{journaltitle}{}{\setunit*{\addcomma\addspace}}%修改为增加一个逗号
   \iffieldundef{series}
     {}
     {\newunit
@@ -3153,15 +3632,27 @@ incollection,proceedings,inproceedings]{number}{%
      \setunit{\addspace}}%
   %\usebibmacro{volume+number+eid}%
   %\setunit{\addspace}%
-  \usebibmacro{issue+date}%
+  \printtext{\usebibmacro{issue+date}}%使用printtext配合后面的\setunit*来实现后面的逗号的自动处理
   %\setunit{\addcolon\space}%
-  \iffieldundef{volume}{}{\setunit{\addcomma\space}}%
+  \iffieldundef{volume}{}{\setunit*{\addcomma\space}}%
   %换成逗号和空格
   \usebibmacro{issue}%
   \usebibmacro{volume+number+eid}%把卷期放到年份后面
   %\newunit
   }
 
+%
+%   调整journal输出
+%
+%   原理方法:首先判断子标题，然后再设置标点。
+%   避免直接设置标点后，当volume不存在时需要使用\nopuct去标点进而引入不必要的空格
+\renewbibmacro*{journal}{%
+  \iffieldundef{journaltitle}%
+    {}%
+    {\printtext[journaltitle]{%
+       \printfield[journaltitlecase]{journaltitle}%
+       \iffieldundef{journalsubtitle}{}{\setunit{\subtitlepunct}%
+       \printfield[journaltitlecase]{journalsubtitle}}}}}
 
 
 %
@@ -3172,15 +3663,17 @@ incollection,proceedings,inproceedings]{number}{%
   \printfield{volume}%
   \setunit*{\adddot}%
   \printfield{number}%
-  \setunit{\addcomma\space}%
-  \printfield{eid}}{%
+  %\setunit{\addcomma\space}%
+  %\printfield{eid}
+  }{%
   \printfield{volume}%
   %\setunit*{\adddot}%去掉点号
   %\printfield{number}%
   \iffieldundef{number}{}{\printtext{\mkbibparens{\printfield{number}}}}%增加一个圆括号
-  \iffieldundef{eid}{}{%
-  \setunit{\addcomma\space}%
-  \printfield{eid}}}}
+  %\iffieldundef{eid}{}{%
+  %\setunit{\addcomma\space}%
+  %\printfield{eid}}%
+  }}
 
 %
 %   调整期刊年份的格式
@@ -3189,15 +3682,15 @@ incollection,proceedings,inproceedings]{number}{%
   \printtext{%去掉了[parens]
     \iffieldundef{issue}
       {%\usebibmacro{date}
-        \iffieldundef{note}{\usebibmacro{date}}%判断一下，是否是报纸
-        {\iffieldequalstr{note}{news}{\usebibmacro{newsdate}}%判断是否为报纸
+        \iffieldundef{entrysubtype}{\usebibmacro{date}}%判断一下，是否是报纸
+        {\iffieldequalstr{entrysubtype}{news}{\usebibmacro{newsdate}}%判断是否为报纸
                                      {\usebibmacro{date}}%
       }}%
       {\iftoggle{bbx:gbstrict}{}{\printfield{issue}%
        \setunit*{\addspace}}%
        %\usebibmacro{date}
-         \iffieldundef{note}{\usebibmacro{date}}%判断一下，是否是报纸
-        {\iffieldequalstr{note}{news}{\usebibmacro{newsdate}}%判断是否为报纸
+         \iffieldundef{entrysubtype}{\usebibmacro{date}}%判断一下，是否是报纸
+        {\iffieldequalstr{entrysubtype}{news}{\usebibmacro{newsdate}}%判断是否为报纸
                                      {\usebibmacro{date}}%
         }}}%
   %\newunit
@@ -3207,10 +3700,24 @@ incollection,proceedings,inproceedings]{number}{%
 %   调整页码前的标点和去掉期刊文章等页码后面的标点
 %
 \renewbibmacro*{note+pages}{%源来自standard.bbx
-  %\printfield{note}%不要note，note用来判断是否是报纸newspaper
-  \iffieldundef{pages}{}{
-  \setunit{\bibpagespunct}%
-  \printfield{pages}}%
+  %\printfield{note}%
+  \iffieldundef{entrysubtype}{%
+      \iffieldundef{pages}{}{%
+      \setunit{\bibpagespunct}%
+      \printfield{pages}}%
+      }%
+      {%
+      \ifboolexpr{test{\iffieldequalstr{entrysubtype}{news}} and test{\iffieldundef{number}}}%判断一下archive类有没有number
+        {%
+            \iffieldundef{pages}{}{%
+            \printtext[parens]{\printfield{pages}}}%
+        }%
+        {%
+            \iffieldundef{pages}{}{%
+            \setunit{\bibpagespunct}%
+            \printfield{pages}}%
+        }%
+      }%
   %\newunit
   }
 
@@ -3310,17 +3817,46 @@ incollection,proceedings,inproceedings]{number}{%
 %   v1.0q 2019-03-01 hzz
 % 不再对editor和bookauthor做sourcemap，而是下面的宏内逻辑代替，
 % 使得除使用bookauthor外也可以使用editor，便于在使用editor时使用editortype
+%   v1.1r 2024-05-17 hzz
+% 增加选项gbnosameeditor后根据其来确定是否输出与author相同的editor或bookauthor
 \renewbibmacro*{bybookauthor}{%
     \ifnameundef{bookauthor}%
         {\ifnameundef{editor}%
             {}%
             {\ifnamesequal{author}{editor}%
-                {}{\usebibmacro{editor}}}%
+                {\iftoggle{bbx:gbnosameeditor}{\clearname{editor}}{\usebibmacro{editor}}%
+                }{\usebibmacro{editor}}}%
         }%
         {\ifnamesequal{author}{bookauthor}%
-            {}{\printnames{bookauthor}}%
+            {\iftoggle{bbx:gbnosameeditor}{\clearname{bookauthor}}{\printnames{bookauthor}}%
+            }{\printnames{bookauthor}}%
         }%
 }
+
+% 责任者如果没有author用editor或translator替代
+% 20210521 v1.0y hzz
+%专著如果责任者是editor那么不用输出类型信息
+\renewbibmacro*{editor+others}{%
+  \ifboolexpr{
+    test \ifuseeditor
+    and
+    not test {\ifnameundef{editor}}
+  }
+    {\printnames{editor}%
+     \clearname{editor}}
+    {}}
+%要注意要使用translator那么需要开启usetranslator选项的。
+%注意其中的标点处理。
+\renewbibmacro*{translator+others}{%
+  \ifboolexpr{
+    test \ifusetranslator
+    and
+    not test {\ifnameundef{translator}}
+  }
+    {\renewcommand{\aftertransdelim}{\adddot\addspace}\printnames{translator}%
+     \clearname{translator}}
+    {}}
+
 
 %
 %   修改期刊的标题
@@ -3332,9 +3868,8 @@ incollection,proceedings,inproceedings]{number}{%
        \printfield[titlecase]{title}%
        %\setunit{\subtitlepunct}%
        \ifboolexpr{test {\iffieldundef{subtitle}}}%这里增加了对子标题的判断，解决不判断多一个点的问题
-       {}{\setunit{\subtitlepunct}
+       {}{\setunit{\subtitlepunct}%
        \printfield[titlecase]{subtitle}}%
-       %}%把编组结束移到后面去
        \iftoggle{bbx:gbtype}{%
        \iffieldundef{usera}{}{%在标题后直接给出文献标识字母
         \printfield[gbtypeflag]{usera}}}{}
@@ -3375,8 +3910,8 @@ incollection,proceedings,inproceedings]{number}{%
   \printtext{\mkbibparens{\multinumbersecond}}}%
   }%
   \setunit{\addcomma\space}%
-  \printfield{eid}%
-  \setunit{\addspace}%
+  %\printfield{eid}%
+  %\setunit{\addspace}%
   %\usebibmacro{issue+date}%
   %\setunit{\addcolon\space}%
   \usebibmacro{issue}%
@@ -3395,7 +3930,6 @@ incollection,proceedings,inproceedings]{number}{%
        %\usebibmacro{date}%修改为下一句
        }%
        }%
-  %\newunit
 }
 
 %
@@ -3431,8 +3965,9 @@ incollection,proceedings,inproceedings]{number}{%
 %   20190212,v1.0q,增加中英文区分，by hzz
 %
 %   原理方法:使用bibmacro{in:}改变了以前在driver中直接输出//的方式，同时也简化了标点控制。
+%   需要注意\bibstring命令会把首字母大写的。
 \renewbibmacro*{in:}{%
- \iftoggle{bbx:gbpunctin}{\printtext{\texttt{//}\allowbreak}}%\addthinspace
+ \iftoggle{bbx:gbpunctin}{\printtext{\allowbreak{\SlashFont//}\allowbreak}}%\addthinspace
                          {\setunit{\adddot\addspace}%
                          \iffieldequalstr{userd}{chinese}%
                          {\printtext{\bibstring{incn}}}%
@@ -3465,11 +4000,11 @@ incollection,proceedings,inproceedings]{number}{%
 %
 %   book条目类的驱动
 %
-  \DeclareBibliographyDriver{book}{%源来自standard.bbx文件
-  \usebibmacro{bibindex}%
-  \usebibmacro{begentry}%
+\DeclareBibliographyDriver{book}{%源来自standard.bbx文件
+\usebibmacro{bibindex}%
+\usebibmacro{begentry}%
 \usebibmacro{author/editor+others/translator+others}%
-\ifnameundef{author}{}{\setunit{\labelnamepunct}\newblock}%这一段用于去除作者不存在时多出的标点
+\ifnameundef{namea}{}{\setunit{\labelnamepunct}\newblock}%这一段用于去除作者不存在时多出的标点
 \usebibmacro{maintitle+title}%
 \iftoggle{bbx:gbstrict}{}{%
 \newunit
@@ -3483,7 +4018,7 @@ incollection,proceedings,inproceedings]{number}{%
 \newunit\newblock%%
 \iftoggle{bbx:gbstrict}{}{%
 \iffieldundef{maintitle}%
-{\printfield{volume}%
+{%\printfield{volume}%
 \printfield{part}}%
 {}%
 \newunit%
@@ -3516,7 +4051,7 @@ incollection,proceedings,inproceedings]{number}{%
     {\usebibmacro{related:init}%
      \usebibmacro{related}}
     {}%
-  \usebibmacro{finentry}\usebibmacro{annotation}}
+  \usebibmacro{annotation}\usebibmacro{finentry}}
 
 
 %
@@ -3544,7 +4079,7 @@ incollection,proceedings,inproceedings]{number}{%
 %  \usebibmacro{byeditor+others}%
 %  \newunit
   \usebibmacro{note+pages}%
-  \iffieldequalstr{note}{news}{}{%当是新闻时不输出修改或更新日期
+  \iffieldequalstr{entrysubtype}{news}{}{%当是新闻时不输出修改或更新日期
   \iffieldundef{url}{}{%当没有网址时也不输出
   \iftoggle{bbx:url}{%当url选项为false时，也不输出
   \usebibmacro{modifydate}}{}}}%带括号的修改或更新日期，
@@ -3564,7 +4099,7 @@ incollection,proceedings,inproceedings]{number}{%
     {\usebibmacro{related:init}%
      \usebibmacro{related}}
     {}%
-  \usebibmacro{finentry}\usebibmacro{annotation}}
+  \usebibmacro{annotation}\usebibmacro{finentry}}
 
 
 
@@ -3602,7 +4137,7 @@ incollection,proceedings,inproceedings]{number}{%
     {\usebibmacro{related:init}%
      \usebibmacro{related}}
     {}%
-  \usebibmacro{finentry}\usebibmacro{annotation}}
+  \usebibmacro{annotation}\usebibmacro{finentry}}
 
 %
 %   专利文献驱动
@@ -3645,7 +4180,7 @@ incollection,proceedings,inproceedings]{number}{%
     {\usebibmacro{related:init}%
      \usebibmacro{related}}
     {}%
-  \usebibmacro{finentry}\usebibmacro{annotation}}
+  \usebibmacro{annotation}\usebibmacro{finentry}}
 
 
 %
@@ -3655,7 +4190,7 @@ incollection,proceedings,inproceedings]{number}{%
   \usebibmacro{bibindex}%
   \usebibmacro{begentry}%
   \usebibmacro{author/editor+others/translator+others}%
-\ifnameundef{author}{}{\setunit{\labelnamepunct}\newblock}%这一段用于去除作者不存在时多出的标点
+\ifnameundef{namea}{}{\setunit{\labelnamepunct}\newblock}%这一段用于去除作者不存在时多出的标点
   \usebibmacro{title}%
   \iftoggle{bbx:gbstrict}{}{%
   \newunit%
@@ -3692,7 +4227,7 @@ test{\iffieldundef{day}} and test{\iffieldundef{endday}} and test{\iffieldundef{
     {\usebibmacro{related:init}%
      \usebibmacro{related}}
     {}%
-  \usebibmacro{finentry}\usebibmacro{annotation}}
+  \usebibmacro{annotation}\usebibmacro{finentry}}
 
 
 %
@@ -3702,8 +4237,8 @@ test{\iffieldundef{day}} and test{\iffieldundef{endday}} and test{\iffieldundef{
 \DeclareBibliographyDriver{report}{%
   \usebibmacro{bibindex}%
   \usebibmacro{begentry}%
-  \usebibmacro{author}%
-\ifnameundef{author}{}{\setunit{\labelnamepunct}\newblock}%这一段用于去除作者不存在时多出的标点
+  \usebibmacro{author/editor+others/translator+others}%
+\ifnameundef{namea}{}{\setunit{\labelnamepunct}\newblock}%这一段用于去除作者不存在时多出的标点
   \usebibmacro{title}%
   \iftoggle{bbx:gbstrict}{}{%
   \newunit%
@@ -3713,10 +4248,10 @@ test{\iffieldundef{day}} and test{\iffieldundef{endday}} and test{\iffieldundef{
   \newunit\newblock
   \usebibmacro{byeditor+others}%增加的译者信息
   \newunit\newblock
-  \printfield{type}%
-  \setunit*{\addspace}%
-  \printfield{number}%
-  \newunit\newblock
+%  \printfield{type}%
+%  \setunit*{\addspace}%
+%  \printfield{number}%
+%  \newunit\newblock
   \printfield{version}%
   \newunit
   \printfield{note}%
@@ -3742,7 +4277,7 @@ test{\iffieldundef{day}} and test{\iffieldundef{endday}} and test{\iffieldundef{
     {\usebibmacro{related:init}%
      \usebibmacro{related}}
     {}%
-  \usebibmacro{finentry}\usebibmacro{annotation}}
+  \usebibmacro{annotation}\usebibmacro{finentry}}
 
 %
 %   论文、手册类型驱动
@@ -3751,8 +4286,8 @@ test{\iffieldundef{day}} and test{\iffieldundef{endday}} and test{\iffieldundef{
 \DeclareBibliographyDriver{manual}{%
   \usebibmacro{bibindex}%
   \usebibmacro{begentry}%
-  \usebibmacro{author}%
-\ifnameundef{author}{}{\setunit{\labelnamepunct}\newblock}%这一段用于去除作者不存在时多出的标点
+  \usebibmacro{author/editor+others/translator+others}%
+\ifnameundef{namea}{}{\setunit{\labelnamepunct}\newblock}%这一段用于去除作者不存在时多出的标点
   \usebibmacro{title}%
   \iftoggle{bbx:gbstrict}{}{%
   \newunit%
@@ -3794,7 +4329,7 @@ test{\iffieldundef{day}} and test{\iffieldundef{endday}} and test{\iffieldundef{
     {\usebibmacro{related:init}%
      \usebibmacro{related}}
     {}%
-  \usebibmacro{finentry}\usebibmacro{annotation}}
+  \usebibmacro{annotation}\usebibmacro{finentry}}
 
 %
 %   备选类型驱动
@@ -3804,7 +4339,7 @@ test{\iffieldundef{day}} and test{\iffieldundef{endday}} and test{\iffieldundef{
   \usebibmacro{bibindex}%
   \usebibmacro{begentry}%
   \usebibmacro{author/editor+others/translator+others}%
-\ifnameundef{author}{}{\setunit{\labelnamepunct}\newblock}%这一段用于去除作者不存在时多出的标点
+\ifnameundef{namea}{}{\setunit{\labelnamepunct}\newblock}%这一段用于去除作者不存在时多出的标点
   \usebibmacro{title}%
 \iftoggle{bbx:gbstrict}{}{%
   \newunit
@@ -3825,6 +4360,7 @@ test{\iffieldundef{day}} and test{\iffieldundef{endday}} and test{\iffieldundef{
   \usebibmacro{institution+location+date}%
   %\usebibmacro{organization+location+date}%
   %\newunit\newblock
+  \usebibmacro{chapter+pages}%
   \usebibmacro{doi+eprint+url}%
   \newunit\newblock
   \usebibmacro{addendum+pubstate}%
@@ -3835,21 +4371,14 @@ test{\iffieldundef{day}} and test{\iffieldundef{endday}} and test{\iffieldundef{
     {\usebibmacro{related:init}%
      \usebibmacro{related}}
     {}%
-  \usebibmacro{finentry}\usebibmacro{annotation}}
-
+  \usebibmacro{annotation}\usebibmacro{finentry}}
 
 %
-%   专著中的析出文献的格式修改
-%
-\DeclareBibliographyDriver{inbook}{%源来自standard.bbx
-  \usebibmacro{bibindex}%
-  \usebibmacro{begentry}%
-  \usebibmacro{author/translator+others}%
-\ifnameundef{author}{}{\setunit{\labelnamepunct}\newblock}%这一段用于去除作者不存在时多出的标点
-\usebibmacro{title}%
-\usebibmacro{in:}%
-%\printtext{\texttt{//}\addthinspace}%
-  \usebibmacro{bybookauthor}%
+%   增加inbook:parent用于辅助crossref传统功能的实现
+%   用在{crosscite}宏中
+%   20210216,v1.0w,hzz
+\newbibmacro*{inbook:parent}{%
+\usebibmacro{bybookauthor}%
   \ifnameundef{bookauthor}{%
   \ifnameundef{editor}{}{\newunit}%
   }{\newunit}%替换下一句
@@ -3876,7 +4405,24 @@ test{\iffieldundef{day}} and test{\iffieldundef{endday}} and test{\iffieldundef{
   \newunit\newblock
   %\printfield{note}%
   %\newunit\newblock
-  \usebibmacro{publisher+location+date}%
+  \usebibmacro{publisher+location+date}}
+
+%
+%   专著中的析出文献的格式修改
+%
+\DeclareBibliographyDriver{inbook}{%源来自standard.bbx
+  \usebibmacro{bibindex}%
+  \usebibmacro{begentry}%
+  \usebibmacro{author/translator+others}%
+  \ifboolexpr{
+    test {\ifnameundef{author}}
+    and
+    test {\ifnameundef{translator}}
+  }{}{\setunit{\labelnamepunct}\newblock}%这一段用于去除作者不存在时多出的标点
+\usebibmacro{title}%
+\usebibmacro{in:}%
+%\printtext{\texttt{//}\addthinspace}%
+\usebibmacro{crosscite}{inbook:parent}%
   %\newunit\newblock
   \usebibmacro{chapter+pages}%
   %\newunit\newblock
@@ -3896,4 +4442,4 @@ test{\iffieldundef{day}} and test{\iffieldundef{endday}} and test{\iffieldundef{
     {\usebibmacro{related:init}%
      \usebibmacro{related}}
     {}%
-  \usebibmacro{finentry}\usebibmacro{annotation}}
+  \usebibmacro{annotation}\usebibmacro{finentry}}
