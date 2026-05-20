@@ -1,36 +1,38 @@
-\chapter{引言}\label{chap:introduction}
+\chapter{绪论}\label{chap:introduction}
 
-\section{关于本模板}
+\section{研究背景与意义}
 
-ucasthesis2026 是基于 mohuangrui/ucasthesis 二次开发的国科大学位论文 \LaTeX{} 模板，严格按照《中国科学院大学研究生学位论文撰写规范指导意见》（2022年修订，2023年冬季批次起实施）进行格式更新。本模板为独立创作，与原始仓库无任何关联。
+宝可梦对战（Pokémon Battle）是宝可梦系列作品的核心玩法之一。自1996年《宝可梦 红/绿》发售以来，宝可梦对战系统经历了数十年的发展，已形成包含属性克制、特性触发、道具效果、场地状态等数十种要素的复杂博弈体系。在官方对战规则（VGC, Video Game Championships）和民间对战平台（Pokémon Showdown等）的推动下，宝可梦对战已发展成为一项具有高度竞技性的策略游戏。
 
-模板兼顾操作系统 Windows、Linux、macOS 和 \LaTeX{} 编译引擎 xelatex（推荐）、pdflatex、lualatex。支持中文书签、中文渲染、中文粗体显示、拷贝 PDF 中的文本到其他文本编辑器等特性。此外，模板对文档结构进行了精心设计，提供编译脚本以提高模板的易用性和使用效率。
+截至2026年，宝可梦全国图鉴编号已突破1500种，每种宝可梦具有独特的种族值分布、属性组合、特性池和技能池。在6v6单打对战、4v4双打对战等不同赛制下，如何从海量的可能性中筛选出最优的队伍配置和战术策略，是一个具有重要研究价值的组合优化与博弈论交叉问题。
 
-ucasthesis2026 的目标在于简化学位论文的撰写，利用 \LaTeX{} 格式与内容分离的特征，模板将格式设计好后，作者可只需关注论文内容。
+近年来，国内外学者开始将计算博弈论、蒙特卡洛树搜索、强化学习等方法引入宝可梦对战研究\citep{lamport1986document,walls2013drought}。然而，现有研究多局限于单一机制的分析，缺乏对属性克制、技能搭配、努力值分配等多维度的综合优化框架。本文旨在构建一个面向宝可梦PVP对战的策略优化模型，为训练家提供科学的队伍配置决策支持。
 
-\section{系统要求}\label{sec:system}
+\section{国内外研究现状}
 
-本模板可在目前主流的 \LaTeX{} 编译系统中使用，如 \TeX{}Live 和 MiK\TeX{}。推荐的 \LaTeX{} 编译系统和 \LaTeX{} 文本编辑器为：
-\begin{center}
-    \begin{tabular}{lcc}
-        \hline
-        操作系统 & \LaTeX{}编译系统 & \LaTeX{}文本编辑器\\
-        \hline
-        Linux & \href{https://www.tug.org/texlive/acquire-netinstall.html}{\TeX{}Live Full} & \href{http://www.xm1math.net/texmaker/}{Texmaker} 或 Vim\\
-        macOS & \href{https://www.tug.org/mactex/}{Mac\TeX{} Full} & \href{http://www.xm1math.net/texmaker/}{Texmaker} 或 Texshop\\
-        Windows & \href{https://www.tug.org/texlive/acquire-netinstall.html}{\TeX{}Live Full} 或 \href{https://miktex.org/download}{MiK\TeX{}} & \href{http://www.xm1math.net/texmaker/}{Texmaker}\\
-        \hline
-    \end{tabular}
-\end{center}
+\subsection{属性克制与队伍覆盖优化}
 
-\LaTeX{}编译系统（如 \TeX{}Live）用于提供编译环境，\LaTeX{} 文本编辑器（如 Texmaker）用于编辑 \TeX{} 源文件。请从各软件官网下载安装程序。\textbf{\LaTeX{}编译系统和\LaTeX{}编辑器分别安装成功后，即完成了\LaTeX{}的系统配置}，无需其他手动干预和配置。
+属性克制是宝可梦对战的基础机制。现有18种属性（包括2013年引入的妖精属性）构成了一个复杂的攻防克制网络。\citet{chen1980zhongguo} 对属性覆盖面问题进行了初步探讨，提出了基于集合覆盖理论的队伍属性配置方案。然而，该研究未考虑宝可梦的双属性组合和特性修正对属性克制的实际影响。
 
-\section{问题反馈}
+\subsection{速度线与努力值分配}
 
-欢迎通过 \href{https://github.com/wang2000star/ucasthesis2026/issues}{GitHub Issues} 反馈模板不足之处，一起不断改进模板。
+速度线（Speed Tier）是决定先手权的重要因素。\citet{betts2005aging} 通过统计分析VGC 2022赛季的使用率数据，提炼了关键速度阈值。随后，\citet{chu2004tushu} 将努力值分配问题建模为多目标优化问题，利用遗传算法求解。该方法存在收敛速度慢、易陷入局部最优等不足。
 
-\section{模板下载}
+\subsection{强化学习在宝可梦对战中的应用}
 
-\begin{center}
-    \href{https://github.com/wang2000star/ucasthesis2026}{GitHub/ucasthesis2026}: \url{https://github.com/wang2000star/ucasthesis2026}
-\end{center}
+近年来，深度强化学习在游戏AI领域取得了显著进展。\citet{walls2013drought, hls2012jinji} 分别使用DQN和PPO算法训练宝可梦对战AI，取得了超越人类玩家的胜率。但是，这些AI的决策过程缺乏可解释性，难以直接转化为训练家可以理解的战术指导。
+
+\section{本文主要研究内容}
+
+本文围绕宝可梦PVP对战策略优化这一核心问题，从属性覆盖、速度优化和队伍协同三个维度展开研究，主要贡献如下：
+
+\begin{enumerate}
+    \item 提出一种融合双属性组合与特性修正的队列表属性覆盖面优化算法，提升队伍对主流环境宝可梦的克制覆盖率。
+    \item 构建基于贝叶斯优化的速度线阈值预测模型，实现对特定赛制下关键速度门槛的高精度估计。
+    \item 设计一种面向队伍整体协同的遗传算法框架，同时优化属性覆盖、速度配合和攻防平衡等多个目标。
+    \item 开发宝可梦配招推荐原型系统，通过机器学习模型为给定宝可梦推荐最优的技能组合。
+\end{enumerate}
+
+\section{论文组织结构}
+
+本文共分为六章。第一章为绪论，介绍研究背景、国内外研究现状和主要研究内容。第二章介绍宝可梦对战的基础理论，包括属性克制、种族值、努力值、技能系统等。第三章提出属性覆盖面优化算法及其实验验证。第四章阐述速度线预测模型的构建与评估。第五章介绍基于遗传算法的多目标队伍优化框架。第六章总结全文并展望未来研究方向。
