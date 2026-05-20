@@ -652,11 +652,11 @@
         afterskip = {6bp},
     }
 }
-%- appendix
+%- appendix: 附录一 per 2022 guidelines (规范第488行)
 \ctexset {
     appendix = {
-        %numbering = true|false,
-        %number = \rmfamily\Alph{chapter},
+        name = {},
+        number = {附录\zhnum{chapter}},
     }
 }
 %---------------------------------------------------------------------------%
@@ -738,12 +738,13 @@
 \renewcommand{\thefigure}{\thechapter-\arabic{figure}}
 \renewcommand{\thetable}{\thechapter-\arabic{table}}
 \renewcommand{\theequation}{\thechapter-\arabic{equation}}
-%- Appendix: 附图1-1 / 附表1-1 (规范第163行)
+%- Appendix: 附图1-1 / 附表1-1 / 附1-1 (规范第163行)
 \g@addto@macro{\appendix}{%
     \renewcommand{\figurename}{}%
     \renewcommand{\thefigure}{附图\arabic{chapter}-\arabic{figure}}%
     \renewcommand{\tablename}{}%
     \renewcommand{\thetable}{附表\arabic{chapter}-\arabic{table}}%
+    \renewcommand{\theequation}{附\arabic{chapter}-\arabic{equation}}%
 }
 %- redefine indentation for others
 \renewcommand*\l@section{\@dottedtocline{1}{1em}{1.8em}}
