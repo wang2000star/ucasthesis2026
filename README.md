@@ -70,7 +70,7 @@ xelatex Thesis.tex
 
 ### 中文字体要求
 
-模板通过 `fontset` 选项支持以下平台配置（在 `Thesis.tex` 中设置）：
+模板通过 `fontset` 选项支持以下平台配置，默认为 `windows`（在 `Thesis.tex` 中设置）：
 
 ```latex
 \documentclass[twoside,fontset=<选项>]{Style/ucasthesis}
