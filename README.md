@@ -132,9 +132,7 @@ Img/
 ## 致谢
 
 - 原始模板 [mohuangrui/ucasthesis](https://github.com/mohuangrui/ucasthesis) 作者莫晃锐
-- CASthesis 模板作者吴凌云研究员
 - [CTeX](https://github.com/CTeX-org/ctex-kit) 开发团队
-- 国科大学位办公室老师们的指导
 
 ## 许可证
 

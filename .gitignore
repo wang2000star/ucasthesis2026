@@ -29,6 +29,7 @@
 
 # Generated PDFs
 *.pdf
+!模板使用说明.pdf
 
 # OS files
 .DS_Store
