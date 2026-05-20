@@ -2,11 +2,23 @@
 @rem            LaTeX Automated Compiler
 @rem                <By Huangrui Mo>
 @rem Copyright (C) Huangrui Mo <huangrui.mo@gmail.com>
+@rem Copyright (C) 2026 Kaqiu Pi <wwwdream521@163.com>
+@rem
 @rem This is free software: you can redistribute it
 @rem and/or modify it under the terms of the GNU General
 @rem Public License as published by the Free Software
 @rem Foundation, either version 3 of the License, or
 @rem (at your option) any later version.
+@rem
+@rem This software is distributed in the hope that it
+@rem will be useful, but WITHOUT ANY WARRANTY; without
+@rem even the implied warranty of MERCHANTABILITY or
+@rem FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+@rem General Public License for more details.
+@rem
+@rem You should have received a copy of the GNU General
+@rem Public License along with this software. If not,
+@rem see <https://www.gnu.org/licenses/>.
 @rem ------------------------------------------------
 @echo off
 @rem ------------------------------------------------

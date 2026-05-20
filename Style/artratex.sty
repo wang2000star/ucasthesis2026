@@ -3,11 +3,21 @@
 %-                           Document Style                                -%
 %-                                                                         -%
 %---------------------------------------------------------------------------%
-%- Copyright (C) Huangrui Mo <huangrui.mo@gmail.com> 
+%- Copyright (C) Huangrui Mo <huangrui.mo@gmail.com>
+%- Copyright (C) 2026 Kaqiu Pi <wwwdream521@163.com>
+%-
 %- This is free software: you can redistribute it and/or modify it
 %- under the terms of the GNU General Public License as published by
 %- the Free Software Foundation, either version 3 of the License, or
 %- (at your option) any later version.
+%-
+%- This software is distributed in the hope that it will be useful,
+%- but WITHOUT ANY WARRANTY; without even the implied warranty of
+%- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+%- GNU General Public License for more details.
+%-
+%- You should have received a copy of the GNU General Public License
+%- along with this software. If not, see <https://www.gnu.org/licenses/>.
 %---------------------------------------------------------------------------%
 %->> Identification
 %---------------------------------------------------------------------------%
@@ -547,7 +557,7 @@
 %-> Figure environment support
 %-
 \RequirePackage{graphicx}% packages for including graphics
-\RequirePackage[format=plain,hangindent=2.0em,font={small,bf},skip=8pt,labelsep=space]{caption}% options: [margin=10pt,labelfont=bf]
+\RequirePackage[format=plain,hangindent=2.0em,font={small,bf},skip=6bp,labelsep=quad]{caption}% caption: 五号≈small, 加粗, 图序与图题间一个汉字符
 \RequirePackage{subcaption}% package for subfigures
 \RequirePackage[list=off]{bicaption}% package for binary captions
 \DeclareCaptionOption{bi-first}[]{}% 1st language
@@ -710,24 +720,32 @@
     %- Deactivate uppercase effect
     \renewcommand{\MakeUppercase}[1]{#1}%
     %- Define different kinds of header and footer for different parts
+    %- Per 2022 guidelines:
+    %- 页眉宋体小五号居中, odd=章节名, even=论文题目
+    %- 正文页码阿拉伯数字, 左页左下角/右页右下角; 正文前罗马数字居中底部
     \fancypagestyle{frontmatterstyle}{% style for frontmatter
         \fancyhf{}% clear fields
-        \fancyhead[C]{\footnotesize \ifnumodd{\value{page}}{\leftmark}{\@title}}% structure elements
-        \fancyfoot[C]{\footnotesize \thepage}% page number
+        \fancyhead[CE]{\zihao{-5}\@title}% even pages: thesis title
+        \fancyhead[CO]{\zihao{-5}\leftmark}% odd pages: section name
+        \fancyfoot[C]{\zihao{-5}\thepage}% page number centered
         \renewcommand{\headrulewidth}{0.8pt}% header rule
         \renewcommand{\footrulewidth}{0pt}% footer rule
     }
     \fancypagestyle{mainmatterstyle}{% style for mainmatter
         \fancyhf{}% clear fields
-        \fancyhead[C]{\footnotesize \ifnumodd{\value{page}}{\leftmark}{\@title}}% structure elements
-        \fancyfoot[C]{\footnotesize \ifnumodd{\value{page}}{\hspace*{\fill}\thepage}{\thepage\hspace*{\fill}}}% page number
+        \fancyhead[CE]{\zihao{-5}\@title}% even pages: thesis title
+        \fancyhead[CO]{\zihao{-5}\leftmark}% odd pages: chapter name
+        \fancyfoot[LE]{\zihao{-5}\thepage}% even pages: page number left
+        \fancyfoot[RO]{\zihao{-5}\thepage}% odd pages: page number right
         \renewcommand{\headrulewidth}{0.8pt}% header rule
         \renewcommand{\footrulewidth}{0pt}% footer rule
     }
     \fancypagestyle{backmatterstyle}{% header and footer style for backmatter
         \fancyhf{}% clear fields
-        \fancyhead[C]{\footnotesize \ifnumodd{\value{page}}{\leftmark}{\@title}}% structure elements
-        \fancyfoot[C]{\footnotesize \ifnumodd{\value{page}}{\hspace*{\fill}\thepage}{\thepage\hspace*{\fill}}}% page number
+        \fancyhead[CE]{\zihao{-5}\@title}% even pages: thesis title
+        \fancyhead[CO]{\zihao{-5}\leftmark}% odd pages: section name
+        \fancyfoot[LE]{\zihao{-5}\thepage}% even pages: page number left
+        \fancyfoot[RO]{\zihao{-5}\thepage}% odd pages: page number right
         \renewcommand{\headrulewidth}{0.8pt}% header rule
         \renewcommand{\footrulewidth}{0pt}% footer rule
     }
@@ -764,8 +782,8 @@
     }
     \fancypagestyle{noheaderstyle}{% header and footer style for no header
         \fancyhf{}% clear fields
-        %\fancyhead[C]{\footnotesize \ifnumodd{\value{page}}{\leftmark}{\@title}}% structure elements
-        \fancyfoot[C]{\footnotesize \ifnumodd{\value{page}}{\hspace*{\fill}\thepage}{\thepage\hspace*{\fill}}}% page number
+        %\fancyhead[C]{\zihao{-5}\ifnumodd{\value{page}}{\leftmark}{\@title}}% structure elements
+        \fancyfoot[C]{\zihao{-5}\ifnumodd{\value{page}}{\hspace*{\fill}\thepage}{\thepage\hspace*{\fill}}}% page number
         \renewcommand{\headrulewidth}{0pt}% header rule
         \renewcommand{\footrulewidth}{0pt}% footer rule
     }
@@ -779,7 +797,7 @@
     \fancyhead[C]{%
         \begin{textblock}{1.0}[0.5,0.5](0.08,0.5)%
             \rotatebox{90}{%
-                \footnotesize \ifnumodd{\value{page}}{\leftmark}{\@title}%
+                \zihao{-5}\ifnumodd{\value{page}}{\leftmark}{\@title}%
             }%
         \end{textblock}%
         \begin{textblock}{1.0}[0.5,0.5](0.08,0.5)%
@@ -791,7 +809,7 @@
     \fancyfoot[C]{%
         \begin{textblock}{1.0}[0.5,0.5](0.92,0.5)
             \rotatebox{90}{%
-                \footnotesize \ifnumodd{\value{page}}{\hspace*{\fill}\thepage}{\thepage\hspace*{\fill}}%
+                \zihao{-5}\ifnumodd{\value{page}}{\hspace*{\fill}\thepage}{\thepage\hspace*{\fill}}%
             }%
         \end{textblock}%
     }%

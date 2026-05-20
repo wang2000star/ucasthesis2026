@@ -1,0 +1,47 @@
+# Intermediate files
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.bbl
+*.blg
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.xdv
+*.nav
+*.snm
+*.vrb
+*.nlo
+*.nls
+*.ilg
+*.idx
+*.ind
+*.glo
+*.gls
+*.glg
+*.ist
+*.run.xml
+*.bcf
+*.mw
+
+# Generated PDFs
+*.pdf
+
+# OS files
+.DS_Store
+Thumbs.db
+*~
+
+# Project management files (not for publication)
+CLAUDE.md
+claude.md
+.claude/
+
+# Editor config
+.vscode/
+.idea/
+*.swp
+*.swo

@@ -3,11 +3,21 @@
 %-                           Document Class                                -%
 %-                                                                         -%
 %---------------------------------------------------------------------------%
-%- Copyright (C) Huangrui Mo <huangrui.mo@gmail.com> 
+%- Copyright (C) Huangrui Mo <huangrui.mo@gmail.com>
+%- Copyright (C) 2026 Kaqiu Pi <wwwdream521@163.com>
+%-
 %- This is free software: you can redistribute it and/or modify it
 %- under the terms of the GNU General Public License as published by
 %- the Free Software Foundation, either version 3 of the License, or
 %- (at your option) any later version.
+%-
+%- This software is distributed in the hope that it will be useful,
+%- but WITHOUT ANY WARRANTY; without even the implied warranty of
+%- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+%- GNU General Public License for more details.
+%-
+%- You should have received a copy of the GNU General Public License
+%- along with this software. If not, see <https://www.gnu.org/licenses/>.
 %---------------------------------------------------------------------------%
 %->> Identification
 %---------------------------------------------------------------------------%
@@ -99,38 +109,27 @@
 %---------------------------------------------------------------------------%
 %->> Page layout
 %---------------------------------------------------------------------------%
-%- use \topmargin insead of \voffset to shift the complete text vertically
-%- use \<odd|even>sidemargin insead of \hoffset to shift text horizontally
-%- part one -- horizontal widths
-%- left side width + textwidth + right side width = paperwidth
-%- binding side width + textwidth + nonbinding side width = paperwidth
-%- binding side width of [odd, even] page = [left, right] side width
-%- left side width of [odd, even] page = 1.0in (fixed) + hoffset + [odd, even]sidemargin
-%- assuming A4 paper (210mm x 297mm)
-\setlength{\textwidth}{146.6mm}% set required text width first
-\setlength{\hoffset}{0mm}% set horizontal offset
-\ifucas@print% if print layout enabled
-    \setlength{\oddsidemargin}{12.6mm}% binding side margin
-    \setlength{\evensidemargin}{0mm}% ensure uniform binding side width for printing
-\else
-    \setlength{\oddsidemargin}{6.3mm}% left side margin
-    \setlength{\evensidemargin}{6.3mm}% ensure uniform left side width for EThesis
-\fi
+%- Use geometry package for proper page margins per 2022 guidelines
+%- Page setup: A4, top/bottom=2.54cm, left/right=3.17cm
+%- Header/Footer to page boundary: 1.5cm
+\RequirePackage[%
+    a4paper,
+    top=2.54cm,
+    bottom=2.54cm,
+    left=3.17cm,
+    right=3.17cm,
+    headheight=12pt,
+    headsep=0.65cm,
+    footskip=0.94cm,
+    includehead,
+    includefoot,
+]{geometry}
 \setlength{\marginparwidth}{35pt}% width of margin notes
 \setlength{\marginparsep}{10pt}% width of space between body text and margin notes
-%- part two -- vertical heights
-%- top height + textheight + bottom height = paperheight
-%- top height = 1.0in (fixed) + voffset + topmargin + headheight + headsep 
-\setlength{\textheight}{246.2mm}% set required text height first
-\setlength{\voffset}{0mm}% set vertical offset
-\setlength{\topmargin}{-10.4mm}% vertical margin above header
-\setlength{\headheight}{12pt}% header height
-\setlength{\headsep}{17.5pt}% vertical margin between header and body text
-\setlength{\footskip}{10.4mm}% vertical margin between footer and body text
 %- specifies the amount of space between paragraphs.
 \setlength{\parskip}{0.5ex plus 0.25ex minus 0.25ex}
-%- line spacing
-\linespread{1.6}% line space setting
+%- line spacing: 1.25倍行距 per 2022 guidelines
+\linespread{1.25}% line space setting
 \raggedbottom% prevent adding vertical white space in strange places
 %- default pagestyle is page number at bottom without headers and footers
 \pagestyle{plain}
@@ -287,9 +286,6 @@
     \cleardoublepage
     \thispagestyle{empty}
     \begin{center}
-        \linespread{1.6}
-        \zihao{4}\bfseries
-
         \hfill{} \ucasifstrbk{\ucas@value@ch@confidential}{}{\ucas@label@ch@confidential \ulenhance{\ulextend[50pt]{\hspace*{-\ulhshift}\zihao{5}\ucas@value@ch@confidential}}}
 
         \vspace*{\stretch{4}}
@@ -302,12 +298,15 @@
 
         \vspace*{\stretch{3}}
 
-        {\zihao{-3}\bfseries\sffamily \ulenhance[1.5pt]{\ucas@value@ch@title}}
+        % 论文题目：黑体小三号加粗居中，单倍行距
+        {\linespread{1.0}\zihao{-3}\bfseries\sffamily \ulenhance[1.5pt]{\ucas@value@ch@title}}
 
         \vspace*{\stretch{3}}
 
+        % 封面信息：宋体四号加粗，2倍行距
+        \linespread{2.0}\zihao{4}\bfseries
         \def\tabcolsep{1pt}
-        \def\arraystretch{1.3}
+        \def\arraystretch{1.0}
         \begin{tabular}{lc}
             \ucas@label@ch@author & \ulenhance[1.2pt]{\ulextend{\ucas@value@ch@author}}\\
             \ucas@label@ch@advisor & \ucaslntotab[1.2pt]{\ucas@value@ch@advisor}\\
@@ -318,6 +317,7 @@
 
         \vspace*{\stretch{4}}
 
+        % 日期：Times New Roman 四号加粗，仅年月
         {\ucas@value@ch@date}
 
         \vspace*{\stretch{4}}
@@ -415,14 +415,15 @@
     \cleardoublepage
     \thispagestyle{empty}
     \begin{center}
-        \linespread{1.6}
-        \zihao{4}\bfseries
-
         \vspace*{50pt}
 
-        {\zihao{-3}\bfseries \ulenhance[1.5pt]{\ucas@value@en@title}}
+        % 英文题目：Times New Roman小三号加粗居中，单倍行距
+        {\linespread{1.0}\zihao{-3}\bfseries \ulenhance[1.5pt]{\ucas@value@en@title}}
 
         \vspace*{\stretch{3}}
+
+        % 其他信息：Times New Roman四号加粗，2倍行距
+        \linespread{2.0}\zihao{4}\bfseries
 
         {\ucas@label@en@statement}
 
@@ -500,14 +501,16 @@
     \cleardoublepage
     \thispagestyle{empty}
     {
-        \linespread{1.6}
+        \linespread{1.25}
         \zihao{-4}
 
         \vspace*{2ex}
 
         \begin{center}
-            {\zihao{4}\bfseries\sffamily \ucas@label@ch@declare@creativity}
+            {\linespread{1.0}\zihao{4}\bfseries\sffamily \ucas@label@ch@declare@creativity}
         \end{center}
+
+        \vspace*{12bp}
 
         {\ucas@value@ch@declare@creativity}
 
@@ -520,8 +523,10 @@
         \vspace*{6ex}
 
         \begin{center}
-            {\zihao{4}\bfseries\sffamily \ucas@label@ch@declare@rights}
+            {\linespread{1.0}\zihao{4}\bfseries\sffamily \ucas@label@ch@declare@rights}
         \end{center}
+
+        \vspace*{12bp}
 
         {\ucas@value@ch@declare@rights}
 
@@ -612,8 +617,8 @@
         number = \arabic{chapter},
         numberformat = \rmfamily,
         aftername = \quad,
-        beforeskip = {7pt},
-        afterskip = {18pt},
+        beforeskip = {24bp},
+        afterskip = {18bp},
         pagestyle = plain,
     }
 }
@@ -623,8 +628,8 @@
         format = \linespread{1.0}\zihao{-4}\sffamily\raggedright,
         numberformat = \rmfamily,
         aftername = \quad,
-        beforeskip = {24pt},
-        afterskip = {6pt},
+        beforeskip = {24bp},
+        afterskip = {6bp},
     }
 }
 %- subsection
@@ -633,8 +638,8 @@
         format = \linespread{1.0}\zihao{-4}\sffamily\raggedright,
         numberformat = \rmfamily,
         aftername = \quad,
-        beforeskip = {12pt},
-        afterskip = {6pt},
+        beforeskip = {12bp},
+        afterskip = {6bp},
     }
 }
 %- subsubsection
@@ -643,8 +648,8 @@
         format = \linespread{1.0}\zihao{-4}\sffamily\raggedright,
         numberformat = \rmfamily,
         aftername = \quad,
-        beforeskip = {12pt},
-        afterskip = {6pt},
+        beforeskip = {12bp},
+        afterskip = {6bp},
     }
 }
 %- appendix
@@ -671,7 +676,7 @@
 \def\@dotsep{1.5mu}% separation between dots in mu units
 \def\@pnumwidth{2em}% width of a box in which the page number is put
 \def\@tocrmarg{2em}% right margin for multiple line entries, \@tocrmarg ≥ \@pnumwidth
-\def\@chaptervspace{1ex}% vertical space between chapter titles
+\def\@chaptervspace{6bp}% vertical space between chapter titles (段前6磅 per 2022 guidelines)
 
 %- redefine dottedtocline from classes.dtx and latex.ltx
 \renewcommand*{\@dottedtocline}[5]{% [<level>,<indent>,<numwidth>,<title>,<page>]
