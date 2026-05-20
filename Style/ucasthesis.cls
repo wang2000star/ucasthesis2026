@@ -783,18 +783,19 @@
 \renewcommand*\l@subsubsection{\@dottedtocline{3}{3em}{3.8em}}
 \renewcommand*\l@paragraph{\@dottedtocline{4}{4em}{4.8em}}
 \renewcommand*\l@subparagraph{\@dottedtocline{5}{5em}{5.8em}}
-%- redefine l@figure for figure list (黑体四号, 段前6磅, 段后0磅 per 规范第466行)
+%- redefine l@figure for figure list (黑体四号, 单倍行距, 段前6磅, 段后0磅 per 规范第466行)
 \renewcommand*\l@figure[2]{%
     \ifnum \c@tocdepth >\m@ne
         \addpenalty{-\@highpenalty}%
-        \vskip 6bp \@plus\p@
-        \setlength\@tempdima{1.8em}%
+        \vskip 6bp
         \begingroup
             \parindent \z@ \rightskip \@pnumwidth
             \parfillskip -\@pnumwidth
-            \leavevmode \zihao{4}\sffamily
+            \linespread{1.0}\zihao{4}\sffamily
+            \setlength\@tempdima{4em}% wide enough for 附图/附表 prefix in appendix
             \advance\leftskip 1em
             \hskip -\leftskip
+            \leavevmode
             #1\nobreak
             \leaders\hbox{$\m@th\mkern \@dotsep \cdot\mkern \@dotsep$}%
             \hfil \nobreak\hb@xt@\@pnumwidth{\hss #2}\par
@@ -802,18 +803,19 @@
         \endgroup
     \fi
 }
-%- redefine l@table for table list (黑体四号, 段前6磅, 段后0磅 per 规范第466行)
+%- redefine l@table for table list (黑体四号, 单倍行距, 段前6磅, 段后0磅 per 规范第466行)
 \renewcommand*\l@table[2]{%
     \ifnum \c@tocdepth >\m@ne
         \addpenalty{-\@highpenalty}%
-        \vskip 6bp \@plus\p@
-        \setlength\@tempdima{1.8em}%
+        \vskip 6bp
         \begingroup
             \parindent \z@ \rightskip \@pnumwidth
             \parfillskip -\@pnumwidth
-            \leavevmode \zihao{4}\sffamily
+            \linespread{1.0}\zihao{4}\sffamily
+            \setlength\@tempdima{4em}% wide enough for 附图/附表 prefix in appendix
             \advance\leftskip 1em
             \hskip -\leftskip
+            \leavevmode
             #1\nobreak
             \leaders\hbox{$\m@th\mkern \@dotsep \cdot\mkern \@dotsep$}%
             \hfil \nobreak\hb@xt@\@pnumwidth{\hss #2}\par
