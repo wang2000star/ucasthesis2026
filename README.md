@@ -66,8 +66,47 @@ xelatex Thesis.tex
 | LaTeX 引擎 | xelatex（推荐）、pdflatex、lualatex |
 | 文献编译 | bibtex（gbt7714）或 biber（biblatex-gb7714-2015） |
 | 文档类 | ctexbook |
-| 中文字体 | SimSun（宋体）、SimHei（黑体）、FangSong（仿宋）或 Fandol 替代 |
-| 英文字体 | Times New Roman 或等效字体（XITS 等） |
+| 英文字体 | XITS（TeX Live 自带），或 newtxtext/newtxmath 作为 fallback |
+
+### 中文字体要求
+
+模板根据操作系统自动选择字体配置（通过 `fontset` 选项控制）：
+
+| 选项 | 适用平台 | 所需字体 |
+|------|---------|---------|
+| `windows` | Windows | SimSun（宋体）、SimHei（黑体）、FangSong（仿宋）、KaiTi（楷体） |
+| `mac` | macOS | Songti SC、Heiti SC、STFangsong、Kaiti SC |
+| `adobe` | 已安装 Adobe 字体的系统 | AdobeSongStd、AdobeHeitiStd、AdobeFangsongStd、AdobeKaitiStd |
+| `none` | 自定义字体目录 | 将上述 Adobe 字体放入 `./Font/` 目录 |
+
+默认选项为 `windows`。如需更改，在 `Thesis.tex` 中修改 `fontset` 参数：
+
+```latex
+\documentclass[fontset=mac]{Style/ucasthesis}
+```
+
+#### 检查字体是否已安装
+
+**Windows（命令提示符）：**
+```cmd
+fc-list :lang=zh | findstr /i "simsun simhei fangsong kaiti"
+```
+
+**macOS / Linux：**
+```bash
+fc-list :lang=zh | grep -iE "simsun|simhei|fangsong|kaiti|songti|heiti|fangsong|adobe"
+```
+
+**检查英文字体（XITS）：**
+```bash
+fc-list | grep -i xits
+```
+
+#### 常见问题
+
+- **Linux 用户**：系统通常不自带上述中文字体。可安装 TeX Live 自带的 Fandol 开源字体作为替代（当前模板尚未配置 Fandol fallback，后续版本将支持）。
+- **Overleaf 用户**：已预装 SimSun/SimHei/FangSong/KaiTi，无需额外配置。
+- **缺失字体的后果**：编译时出现 `font-not-found` 错误，或中文显示为空白/方块。
 
 ## 项目结构
 
