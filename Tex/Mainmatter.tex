@@ -6,6 +6,11 @@
 % - 图表标题必须使用 \bicaption{中文标题}{English caption} 提供中英双语标题
 % - 引用文献使用 \citep{}（括号引用）或 \citet{}（正文引用），多篇引用用英文逗号分隔
 % - 中文文献必须在 .bib 文件的 key 域填写作者姓名拼音，以便文献列表按拼音排序
-\input{Tex/Chap_Intro}
-\input{Tex/Chap_Guide}
+% - 写作时可以只取消当前编辑章节的注释，以加快编译速度
+\input{Tex/Chap_1_Intro}     % 第1章 绪论
+\input{Tex/Chap_2_Basics}    % 第2章 宝可梦对战基础理论
+\input{Tex/Chap_3_Method}    % 第3章 基于属性覆盖与速度线的队伍优化方法
+\input{Tex/Chap_4_Expt}      % 第4章 实验设计与结果分析
+\input{Tex/Chap_5_Concl}     % 第5章 总结与展望
+%\input{Tex/Chap_Guide}      % LaTeX使用说明（仅供模板参考，论文中勿启用）
 %---------------------------------------------------------------------------%

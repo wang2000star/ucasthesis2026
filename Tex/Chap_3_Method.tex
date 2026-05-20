@@ -1,0 +1,110 @@
+\chapter{基于属性覆盖与速度线的队伍优化方法}\label{chap:method}
+
+本章详细介绍本文提出的宝可梦队伍优化方法。首先阐述融合双属性组合与特性修正的属性覆盖面优化算法，然后介绍基于贝叶斯优化的速度线阈值预测模型，最后给出面向队伍整体协同的多目标遗传算法框架。
+
+\section{属性覆盖面优化算法}
+
+\subsection{问题建模}
+
+设队伍 $T = \{P_1, P_2, \ldots, P_6\}$ 包含六只宝可梦，每只宝可梦 $P_i$ 具有技能集合 $M_i = \{m_{i1}, m_{i2}, m_{i3}, m_{i4}\}$。当使用技能 $m$ 攻击防御宝可梦 $D$ 时，伤害倍率为：
+
+\begin{equation}\label{eq:damage-mult}
+    f(m, D) = \prod_{t \in \text{types}(D)} \text{eff}(\text{type}(m), t) \times \text{stab}(m, P_i) \times \text{ability\_mod}(P_i, D)
+\end{equation}
+
+其中 $\text{eff}(a, b)$ 为属性 $a$ 对属性 $b$ 的基础克制倍率，$\text{stab}(m, P_i)$ 为本系加成因子，$\text{ability\_mod}(P_i, D)$ 为特性修正项。
+
+队伍的属性覆盖度 $C(T)$ 定义为：对目标宝可梦集合 $\mathcal{D}$，存在至少一个技能使其伤害倍率超过阈值 $\tau$（通常取 $\tau=1.0$，即能造成正常伤害即可）的宝可梦数量占比：
+
+\begin{equation}\label{eq:coverage}
+    C(T) = \frac{|\{D \in \mathcal{D} : \exists P_i \in T, \exists m \in M_i, f(m, D) \geq \tau\}|}{|\mathcal{D}|}
+\end{equation}
+
+\subsection{算法设计}
+
+本文提出一种贪心-局部搜索混合算法（Greedy-Local Search Hybrid, GLSH）来最大化队伍的属性覆盖度。算法分为两个阶段：
+
+\textbf{阶段一：贪心构建}。从空队伍开始，每次选取使当前覆盖度增量最大的宝可梦加入队伍，直到队伍满6只或覆盖度不再提升。
+
+\textbf{阶段二：局部搜索优化}。对贪心构建的结果进行邻域搜索，每次尝试替换队伍中的一只宝可梦，若覆盖度提升则接受替换，直到达到局部最优。
+
+算法伪代码如算法~\ref{alg:glsh}所示。
+
+\begin{algorithm}[!htbp]
+    \small
+    \caption{GLSH 属性覆盖优化算法}\label{alg:glsh}
+    \begin{algorithmic}[1]
+        \State 输入：候选宝可梦池 $\mathcal{P}$，目标防御宝可梦集合 $\mathcal{D}$
+        \State 输出：最优队伍 $T^*$
+        \State 初始化空队伍 $T \gets \emptyset$
+        \Repeat
+            \State $P^* \gets \argmax_{P \in \mathcal{P} \setminus T} [C(T \cup \{P\}) - C(T)]$
+            \If {$C(T \cup \{P^*\}) > C(T) \land |T| < 6$}
+                \State $T \gets T \cup \{P^*\}$
+            \EndIf
+        \Until {$|T| = 6$ 或覆盖度不再提升}
+        \Repeat
+            \State 选择 $P_{out} \in T$, $P_{in} \in \mathcal{P} \setminus T$
+            \State $T' \gets (T \setminus \{P_{out}\}) \cup \{P_{in}\}$
+            \If {$C(T') > C(T)$}
+                \State $T \gets T'$
+            \EndIf
+        \Until 达到局部最优
+        \State \Return $T$
+    \end{algorithmic}
+\end{algorithm}
+
+\section{速度线阈值预测模型}
+
+\subsection{基于贝叶斯优化的速度线分析}
+
+速度线的确定具有高度的赛制依赖性。本文提出基于贝叶斯优化（Bayesian Optimization）的速度线阈值预测方法。设速度线阈值 $\theta^*$ 为待优化参数，目标函数 $g(\theta)$ 为在给定阈值下队伍的综合表现评分：
+
+\begin{equation}\label{eq:bayes-opt}
+    \theta^* = \argmax_{\theta \in [\theta_{\min}, \theta_{\max}]} g(\theta)
+\end{equation}
+
+贝叶斯优化通过高斯过程（Gaussian Process）代理模型对 $g(\theta)$ 进行建模，利用期望提升（Expected Improvement, EI）作为采集函数，在探索（Exploration）与利用（Exploitation）之间取得平衡。
+
+\subsection{关键速度门槛的提取}
+
+通过对VGC 2022--2025赛季数据进行分析，本文提取了如表~\ref{tab:speed-tiers}所示的关键速度门槛。
+
+\begin{table}[!htbp]
+    \bicaption{VGC 2022--2025赛季关键速度门槛。}{Key speed tier thresholds in VGC 2022--2025 seasons.}
+    \label{tab:speed-tiers}
+    \centering
+    \footnotesize
+    \begin{tabular}{ccccl}
+        \hline
+        速度门槛 & 实际速度值 & 要求种族值 & 努力值投入 & 代表性宝可梦 \\
+        \hline
+        极速线 & $\geq$200 & $\geq$120 & 252 EV & 雷吉艾勒奇 \\
+        高速线 & 160--199 & 90--119 & 252 EV & 振翼发 \\
+        中速线 & 120--159 & 60--89 & 适量EV & 土地云 \\
+        低速线 & <120 & <60 & 最低EV & 青铜钟 \\
+        空间线 & <50 & <30 & 0 EV & 垒磊石 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{多目标遗传算法框架}
+
+\subsection{编码方案与适应度函数}
+
+本文采用NSGA-II（Nondominated Sorting Genetic Algorithm II）作为多目标优化框架。每一条染色体编码一个队伍的六只宝可梦及各自的道具、技能和努力值分配方案。
+
+适应度评估包含三个子目标：
+\begin{enumerate}
+    \item $f_1$：属性覆盖度 $C(T)$（最大化）；
+    \item $f_2$：速度配合度 $S(T)$，衡量队伍的速度线阶梯分布合理性（最大化）；
+    \item $f_3$：攻防平衡度 $B(T)$，衡量队伍的物理/特殊输出和防御均衡性（最大化）。
+\end{enumerate}
+
+\subsection{非支配排序与拥挤度计算}
+
+NSGA-II通过非支配排序将种群划分为多个前沿层级，并在同一前沿内通过拥挤度距离（Crowding Distance）保持解的多样性。最终输出帕累托最优解集，训练家可根据个人偏好从中选择最终队伍配置。
+
+\section{本章小结}
+
+本章从属性覆盖优化、速度线预测和队伍协同三个方面构建了宝可梦PVP队伍优化框架。GLSH算法有效提升了队伍的属性覆盖面，贝叶斯优化模型实现了对速度线阈值的精确预测，NSGA-II框架则提供了兼顾多个目标的帕累托最优队伍配置方案。

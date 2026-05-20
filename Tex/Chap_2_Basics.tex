@@ -1,0 +1,93 @@
+\chapter{宝可梦对战基础理论}\label{chap:basics}
+
+本章介绍宝可梦对战的核心机制，为后续章节的算法设计提供理论基础。
+
+\section{宝可梦的基本属性}
+
+\subsection{种族值}
+
+种族值（Base Stats）是宝可梦种族固有的能力值基准，决定了宝可梦在进化链中的定位。每只宝可梦具有六项种族值：HP、攻击、防御、特攻、特防和速度，各项数值通常在20--255之间。种族值之和（BST, Base Stat Total）反映了宝可梦的综合实力水平。
+
+不同定位的宝可梦具有差异化的种族值分布特征：
+\begin{enumerate}
+    \item 速攻型宝可梦（Sweeper）：速度和攻击/特攻种族值较高，适合先手输出；
+    \item 耐久型宝可梦（Wall）：HP和防御/特防种族值较高，适合承担伤害；
+    \item 均衡型宝可梦（Balanced）：各项种族值分布均匀，战术灵活。
+\end{enumerate}
+
+\subsection{个体值与努力值}
+
+个体值（IV, Individual Values）是宝可梦在出生时确定的先天能力参数，每项范围为0--31。在PVP对战中，通常默认所有宝可梦的个体值均为最大值31（即所谓的“6V”），以排除先天因素的干扰。
+
+努力值（EV, Effort Values）是宝可梦通过后天训练获得的能力参数，每项范围为0--252，总和不超过510。努力值的分配直接决定了宝可梦在特定速度线下的出手顺序和攻防阈值，是PVP对战策略优化的核心变量之一。
+
+\subsection{性格修正}
+
+性格（Nature）通过10\%的增幅/减幅进一步微调宝可梦的能力值，共计25种性格类型。性格的选择通常遵循以下原则：增强核心输出或速度属性，削弱不影响战术定位的次要属性。
+
+\section{属性克制系统}
+
+\subsection{十八种属性及其克制关系}
+
+截至2026年，宝可梦对战系统包含18种属性：一般、格斗、飞行、毒、地面、岩石、虫、幽灵、钢、火、水、草、电、超能力、冰、龙、恶、妖精。每种属性之间具有克制、抵抗和免疫三种关系。
+
+属性克制的伤害倍率计算采用乘法模型：
+\begin{equation}\label{eq:type-effectiveness}
+    \text{Damage Multiplier} = \prod_{k=1}^{n} m_k
+\end{equation}
+其中 $m_k$ 为第 $k$ 种属性对被攻击方属性的克制倍率，$n$ 为攻击方技能属性数（通常 $n=1$）或被攻击方的属性数（通常 $n=1$ 或 $n=2$）。
+
+当被攻击方具有双属性时，伤害倍率为两个属性各自对应倍率的乘积。表~\ref{tab:type-chart} 展示了部分常见的属性克制倍率组合。
+
+\begin{table}[!htbp]
+    \bicaption{常见属性克制倍率示例。}{Examples of common type effectiveness multipliers.}
+    \label{tab:type-chart}
+    \centering
+    \footnotesize
+    \begin{tabular}{lcccl}
+        \hline
+        攻击属性 & 防御属性1 & 防御属性2 & 倍率 & 典型宝可梦 \\
+        \hline
+        电 & 水 & 飞行 & 4× & 暴鲤龙 \\
+        冰 & 龙 & 地面 & 4× & 烈咬陆鲨 \\
+        格斗 & 岩石 & 钢 & 4× & 垒磊石 \\
+        地面 & 钢 & 岩石 & 4× & 巨金怪（Mega） \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsection{属性覆盖度的定义}
+
+在组队过程中，训练家希望队伍中六只宝可梦的技能能够尽可能覆盖所有可能的属性克制面。本文定义属性覆盖度（Type Coverage）为：对于给定队伍 $T$，其技能属性集合 $S(T)$ 对全图鉴属性组合 $A$ 的克制度比例。
+
+\section{速度线与先手权}
+
+速度线（Speed Tier）是指对战中决定宝可梦出手顺序的关键阈值。速度线的计算公式为：
+
+\begin{equation}\label{eq:speed}
+    \text{Speed}_{\text{actual}} = \left\lfloor\left(2 \times \text{Base} + \text{IV} + \left\lfloor\frac{\text{EV}}{4}\right\rfloor + 5\right) \times \text{Nature}\right\rfloor
+\end{equation}
+
+其中 Base 为速度种族值，Nature 为性格修正系数（0.9、1.0或1.1）。
+
+在VGC赛制中，速度线分析有助于确定关键的速度阈值，从而精准分配努力值。例如，在2025赛季中，速度种族值100的区域通常被视为关键速度线，大量宝可梦需要在该区间内争夺先手权。
+
+\section{技能系统与战术要素}
+
+\subsection{技能分类}
+
+宝可梦的技能按属性、威力、命中率和效果分为多种类型。在PVP对战中，技能的选择需要考虑以下维度：
+
+\begin{itemize}
+    \item 本系加成（STAB, Same Type Attack Bonus）：技能属性与宝可梦属性一致时，威力提升50\%；
+    \item 打击面（Coverage）：技能属性对各类防御宝可梦的克制效果；
+    \item 功能性（Utility）：包括控速、场地设置、状态施加等非伤害效果。
+\end{itemize}
+
+\subsection{特性与道具}
+
+特性（Ability）和道具（Item）进一步丰富了宝可梦对战的策略空间。常见的影响对战的特性包括：天气/场地触发、伤害加成、速度控制等。道具则包括：生命宝珠（Life Orb）、专爱围巾（Choice Scarf）、气势披带（Focus Sash）等。
+
+\section{本章小结}
+
+本章介绍了宝可梦对战的基础机制，包括种族值体系、属性克制网络、速度线计算和技能系统。这些机制构成了后续章节中算法设计的约束空间和目标函数的基础。
