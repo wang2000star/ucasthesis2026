@@ -738,13 +738,44 @@
 \renewcommand{\thefigure}{\thechapter-\arabic{figure}}
 \renewcommand{\thetable}{\thechapter-\arabic{table}}
 \renewcommand{\theequation}{\thechapter-\arabic{equation}}
+%- Patched \@caption for appendix: writes 附图/附表 prefix to .lof/.lot files
+%- while keeping \ref return value as just "1-1" (number only)
+\let\ucas@std@caption\@caption
+\long\def\ucas@app@caption#1[#2]#3{%
+    \par
+    \begingroup
+        \edef\ucas@tmpa{#1}%
+        \def\ucas@tmpb{figure}%
+        \ifx\ucas@tmpa\ucas@tmpb
+            \edef\thefigure{附图\thefigure}%
+        \else
+            \def\ucas@tmpb{table}%
+            \ifx\ucas@tmpa\ucas@tmpb
+                \edef\thetable{附表\thetable}%
+            \fi
+        \fi
+        \addcontentsline{\csname ext@#1\endcsname}{#1}%
+            {\protect\numberline{\csname the#1\endcsname}{\ignorespaces #2}}%
+    \endgroup
+    \begingroup
+        \@parboxrestore
+        \if@minipage
+            \@setminipage
+        \fi
+        \normalsize
+        \@makecaption{\csname fnum@#1\endcsname}{\ignorespaces #3}\par
+    \endgroup
+}
 %- Appendix: 附图1-1 / 附表1-1 / 附1-1 (规范第163行)
+%- \ref returns "1-1", user writes 附表\ref{tab} → 附表1-1
+%- Chart directory uses \ucas@app@caption which writes 附图/附表 prefix to list files
 \g@addto@macro{\appendix}{%
-    \renewcommand{\figurename}{}%
-    \renewcommand{\thefigure}{附图\arabic{chapter}-\arabic{figure}}%
-    \renewcommand{\tablename}{}%
-    \renewcommand{\thetable}{附表\arabic{chapter}-\arabic{table}}%
+    \renewcommand{\figurename}{附图}%
+    \renewcommand{\thefigure}{\arabic{chapter}-\arabic{figure}}%
+    \renewcommand{\tablename}{附表}%
+    \renewcommand{\thetable}{\arabic{chapter}-\arabic{table}}%
     \renewcommand{\theequation}{附\arabic{chapter}-\arabic{equation}}%
+    \let\@caption\ucas@app@caption
 }
 %- redefine indentation for others
 \renewcommand*\l@section{\@dottedtocline{1}{1em}{1.8em}}
