@@ -733,14 +733,54 @@
         \endgroup
     \fi
 }
+%- figure/table/equation numbering: 图1-1 per 2022 guidelines (规范第163行)
+\renewcommand{\thefigure}{\arabic{chapter}-\arabic{figure}}
+\renewcommand{\thetable}{\arabic{chapter}-\arabic{table}}
+\renewcommand{\theequation}{\arabic{chapter}-\arabic{equation}}
 %- redefine indentation for others
 \renewcommand*\l@section{\@dottedtocline{1}{1em}{1.8em}}
 \renewcommand*\l@subsection{\@dottedtocline{2}{2em}{2.8em}}
 \renewcommand*\l@subsubsection{\@dottedtocline{3}{3em}{3.8em}}
 \renewcommand*\l@paragraph{\@dottedtocline{4}{4em}{4.8em}}
 \renewcommand*\l@subparagraph{\@dottedtocline{5}{5em}{5.8em}}
-\renewcommand*\l@figure{\@dottedtocline{1}{1em}{1.8em}}
-\renewcommand*\l@table{\@dottedtocline{1}{1em}{1.8em}}
+%- redefine l@figure for figure list (黑体四号, 段前6磅, 段后0磅 per 规范第466行)
+\renewcommand*\l@figure[2]{%
+    \ifnum \c@tocdepth >\m@ne
+        \addpenalty{-\@highpenalty}%
+        \vskip 6bp \@plus\p@
+        \setlength\@tempdima{1.8em}%
+        \begingroup
+            \parindent \z@ \rightskip \@pnumwidth
+            \parfillskip -\@pnumwidth
+            \leavevmode \zihao{4}\sffamily
+            \advance\leftskip 1em
+            \hskip -\leftskip
+            #1\nobreak
+            \leaders\hbox{$\m@th\mkern \@dotsep \cdot\mkern \@dotsep$}%
+            \hfil \nobreak\hb@xt@\@pnumwidth{\hss #2}\par
+            \penalty\@highpenalty
+        \endgroup
+    \fi
+}
+%- redefine l@table for table list (黑体四号, 段前6磅, 段后0磅 per 规范第466行)
+\renewcommand*\l@table[2]{%
+    \ifnum \c@tocdepth >\m@ne
+        \addpenalty{-\@highpenalty}%
+        \vskip 6bp \@plus\p@
+        \setlength\@tempdima{1.8em}%
+        \begingroup
+            \parindent \z@ \rightskip \@pnumwidth
+            \parfillskip -\@pnumwidth
+            \leavevmode \zihao{4}\sffamily
+            \advance\leftskip 1em
+            \hskip -\leftskip
+            #1\nobreak
+            \leaders\hbox{$\m@th\mkern \@dotsep \cdot\mkern \@dotsep$}%
+            \hfil \nobreak\hb@xt@\@pnumwidth{\hss #2}\par
+            \penalty\@highpenalty
+        \endgroup
+    \fi
+}
 %---------------------------------------------------------------------------%
 \endinput
 
