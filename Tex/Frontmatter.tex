@@ -13,16 +13,18 @@
 %-
 %-> 中文摘要
 %-
+% 注意："摘  要"二字之间空一个汉字；摘要正文 宋体小四号，1.25 倍行距
+% 关键词之间用中文逗号（，）分隔，末尾不加标点
 \intobmk\chapter*{摘\quad 要}% 显示在书签但不显示在目录
-\chaptermark{摘\quad 要}% 设置页眉
+\chaptermark{摘\quad 要}% 设置页眉（二字之间空一个汉字）
 \setcounter{page}{1}% 开始页码
-\pagenumbering{Roman}% 页码符号
+\pagenumbering{Roman}% 页码符号（前置部分用罗马数字，正文用阿拉伯数字）
 
 宝可梦对战（Pokémon Battle）是宝可梦系列作品的核心玩法，经过数十年的发展已形成包含属性克制、特性触发、道具效果、场地状态等要素的复杂博弈体系。随着宝可梦图鉴数量突破1500种，如何从海量可能性中筛选出最优的队伍配置和战术策略，成为一个具有重要研究价值的组合优化与博弈论交叉问题。
 
 本文围绕宝可梦PVP对战策略优化这一核心问题，从属性覆盖、速度优化和队伍协同三个维度展开研究。首先，提出一种融合双属性组合与特性修正的属性覆盖面优化算法；其次，构建基于贝叶斯优化的速度线阈值预测模型；最后，设计面向队伍整体协同的遗传算法框架，同时优化属性覆盖、速度配合和攻防平衡。实验结果表明，所提出的方法在多个评估指标上均优于现有基线方法。
 
-\keywords{宝可梦对战，属性克制，速度线，遗传算法，队伍配置优化}% 中文关键词
+\keywords{宝可梦对战，属性克制，速度线，遗传算法，队伍配置优化}% 中文关键词（用中文逗号分隔）
 %-
 %-> 英文摘要
 %-
@@ -33,5 +35,5 @@ Pokémon Battle is a core gameplay mechanic of the Pokémon franchise. After dec
 
 This thesis focuses on competitive Pokémon PvP battle strategy optimization across three dimensions: type coverage, speed optimization, and team synergy. First, we propose a type coverage optimization algorithm that incorporates dual-type combinations and ability modifiers. Second, we construct a Bayesian optimization-based speed tier prediction model. Third, we design a genetic algorithm framework for holistic team synergy optimization, simultaneously balancing type coverage, speed coordination, and offensive-defensive equilibrium. Experimental results demonstrate that the proposed methods outperform existing baselines across multiple evaluation metrics.
 
-\KEYWORDS{Pokémon Battle, Type Matchup, Speed Tier, Genetic Algorithm, Team Optimization}% 英文关键词
+\KEYWORDS{Pokémon Battle, Type Matchup, Speed Tier, Genetic Algorithm, Team Optimization}% 英文关键词（用英文逗号分隔）
 %---------------------------------------------------------------------------%

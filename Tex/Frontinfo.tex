@@ -4,11 +4,13 @@
 %-
 %-> 中文封面信息
 %-
+% 注意：中文姓名中间不加空格；学位名称必须与培养层次匹配（学士/硕士/博士）
+% 指导教师分两行：第一行"姓名~职称"，第二行"工作单位"
 \confidential{}% 密级：只有涉密论文才填写
 \schoollogo[scale=0.095]{ucas_logo}% 校徽
-\title{对宝可梦PVP对战策略的相关研究}% 论文中文题目
-\author{皮卡丘}% 论文作者
-\advisor{水箭龟~研究员\\宝可梦联盟科学院}% 指导教师：姓名 专业技术职务 工作单位
+\title{对宝可梦PVP对战策略的相关研究}% 论文中文题目（黑体小三号加粗居中，单倍行距）
+\author{皮卡丘}% 论文作者（姓名中间不加空格）
+\advisor{水箭龟~研究员\\宝可梦联盟科学院}% 指导教师：第一行 姓名~职称；第二行 工作单位
 %\advisor{指导教师一\\指导教师二\\指导教师三}% 多行指导教师示例
 \degree{硕士}% 学位：学士、硕士、博士
 \degreetype{理学}% 学位类别：理学、工学、工程、医学等
@@ -19,8 +21,10 @@
 %-
 %-> 英文封面信息
 %-
+% 注意：英文姓名必须"姓全大写, 名首字母大写"（如 PI Kaqiu），不可用英文习惯的 Kaqiu Pi
+% 学位名称必须拼写准确，Bachelor/Master/Doctor 会影响封面显示的学位类型
 \TITLE{Research on Competitive Pokémon PvP Battle Strategies}% 论文英文题目
-\AUTHOR{PI Kaqiu}% 论文作者（姓全大写，名首字母大写）
+\AUTHOR{PI Kaqiu}% 论文作者（姓全大写，名首字母大写，参考 GB/T 28039-2011）
 \ADVISOR{Supervisor: Professor SHUI Jiangui\\Pokémon League Academy of Sciences}% 指导教师
 \DEGREE{Master}% 学位：Bachelor, Master, Doctor, Postdoctor。封面据英文学位名称自动切换，需确保拼写准确
 \DEGREETYPE{Natural Science}% 学位类别：Philosophy, Natural Science, Engineering 等
