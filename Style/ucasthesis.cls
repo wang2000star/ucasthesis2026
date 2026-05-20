@@ -681,8 +681,8 @@
 %- redefine dottedtocline from classes.dtx and latex.ltx
 \renewcommand*{\@dottedtocline}[5]{% [<level>,<indent>,<numwidth>,<title>,<page>]
     \ifnum #1>\c@tocdepth \else
-        \vskip \z@ \@plus.2\p@
-        {\leftskip #2\relax \rightskip \@tocrmarg \parfillskip -\rightskip
+        \vskip 6bp \@plus\p@
+        {\linespread{1.0}\leftskip #2\relax \rightskip \@tocrmarg \parfillskip -\rightskip
         \parindent #2\relax\@afterindenttrue
         \interlinepenalty\@M
         \leavevmode \zihao{-4}\sffamily
@@ -723,7 +723,7 @@
         \begingroup
             \parindent \z@ \rightskip \@pnumwidth
             \parfillskip -\@pnumwidth
-            \leavevmode \zihao{4}\sffamily
+            \leavevmode \linespread{1.0}\zihao{4}\sffamily
             \advance\leftskip\@tempdima
             \hskip -\leftskip
             #1\nobreak
@@ -734,9 +734,17 @@
     \fi
 }
 %- figure/table/equation numbering: 图1-1 per 2022 guidelines (规范第163行)
-\renewcommand{\thefigure}{\arabic{chapter}-\arabic{figure}}
-\renewcommand{\thetable}{\arabic{chapter}-\arabic{table}}
-\renewcommand{\theequation}{\arabic{chapter}-\arabic{equation}}
+%- Use \thechapter to avoid duplication in appendix (which resets chapter counter)
+\renewcommand{\thefigure}{\thechapter-\arabic{figure}}
+\renewcommand{\thetable}{\thechapter-\arabic{table}}
+\renewcommand{\theequation}{\thechapter-\arabic{equation}}
+%- Appendix: 附图1-1 / 附表1-1 (规范第163行)
+\g@addto@macro{\appendix}{%
+    \renewcommand{\figurename}{}%
+    \renewcommand{\thefigure}{附图\arabic{chapter}-\arabic{figure}}%
+    \renewcommand{\tablename}{}%
+    \renewcommand{\thetable}{附表\arabic{chapter}-\arabic{table}}%
+}
 %- redefine indentation for others
 \renewcommand*\l@section{\@dottedtocline{1}{1em}{1.8em}}
 \renewcommand*\l@subsection{\@dottedtocline{2}{2em}{2.8em}}
